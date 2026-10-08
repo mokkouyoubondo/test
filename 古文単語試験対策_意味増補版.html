@@ -1,0 +1,1652 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>古文単語試験対策</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700;800&family=Zen+Old+Mincho:wght@400;600;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f2ead9;
+    --paper-deep:#e9dfc7;
+    --ink:#454138;
+    --ink-soft:#4a4235;
+    --shu:#a3392a;
+    --shu-deep:#7f2a1f;
+    --ai:#33506e;
+    --gold:#a3803f;
+    --line:#c9b98f;
+    --card:#faf5e8;
+    --night:#1c1712;
+    --night-card:#241f18;
+    --vh:1vh;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0; height:100%; overscroll-behavior:none;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Shippori Mincho','Zen Old Mincho',serif;
+    line-height:1.9;
+    overflow:hidden;
+  }
+  body::before{
+    content:"";
+    position:fixed; inset:0;
+    pointer-events:none;
+    opacity:0.5;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(74,66,53,0.025) 0px, rgba(74,66,53,0.025) 1px, transparent 1px, transparent 3px);
+    mix-blend-mode:multiply;
+    z-index:0;
+  }
+  button{font-family:inherit;}
+
+  #app{ position:relative; width:100%; height:calc(var(--vh, 1vh) * 100); overflow:hidden; }
+
+  .screen{
+    position:absolute; inset:0;
+    height:calc(var(--vh, 1vh) * 100);
+    opacity:0;
+    pointer-events:none;
+    transform:translateY(14px) scale(.99);
+    transition:opacity .55s cubic-bezier(.2,.7,.3,1), transform .55s cubic-bezier(.2,.7,.3,1);
+    z-index:1;
+  }
+  .screen.active{
+    opacity:1;
+    pointer-events:auto;
+    transform:translateY(0) scale(1);
+    z-index:2;
+  }
+
+  /* ============ TITLE SCREEN ============ */
+  #screen-title{
+    display:flex; align-items:center; justify-content:center;
+    background:
+      radial-gradient(ellipse at 50% 30%, rgba(163,57,42,0.07), transparent 60%),
+      var(--paper);
+    cursor:pointer;
+  }
+  .title-stage{
+    text-align:center;
+    position:relative;
+  }
+  .title-frame{
+    border:1.5px solid var(--gold);
+    padding:clamp(20px,4vh,46px) clamp(18px,4vw,34px);
+    position:relative;
+    display:inline-block;
+  }
+  .title-frame::before, .title-frame::after{
+    content:"";
+    position:absolute;
+    width:14px; height:14px;
+    border:2px solid var(--shu);
+  }
+  .title-frame::before{ top:-8px; left:-8px; border-right:none; border-bottom:none; }
+  .title-frame::after{ bottom:-8px; right:-8px; border-left:none; border-top:none; }
+  .title-vertical{
+    display:flex;
+    flex-direction:row-reverse;
+    align-items:flex-start;
+    gap:clamp(0.4em, 3vw, 0.9em);
+    margin:0;
+  }
+  .title-col{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:clamp(0.12em, 1.1vh, 0.28em);
+  }
+  .title-vertical .ch{
+    display:block;
+    font-family:'Shippori Mincho', serif;
+    font-weight:800;
+    font-size:clamp(1.5rem, 6.5vh, 2.7rem);
+    line-height:1;
+    color:var(--ink);
+    opacity:0;
+    filter:blur(4px);
+    animation:chIn .6s ease forwards;
+  }
+  @keyframes chIn{
+    to{ opacity:1; filter:blur(0); }
+  }
+  .tap-hint{
+    margin:clamp(14px,3vh,26px) 0 0;
+    font-size:0.78rem;
+    letter-spacing:0.4em;
+    color:var(--ink-soft);
+    opacity:0;
+    animation:hintIn 1s ease forwards 1.9s, blinkHint 2s ease-in-out infinite 2.9s;
+  }
+  @keyframes hintIn{ to{ opacity:0.85; } }
+  @keyframes blinkHint{ 0%,100%{opacity:0.85;} 50%{opacity:0.25;} }
+
+  /* ============ ROUND SELECT SCREEN ============ */
+  #screen-rounds{
+    background:var(--paper);
+    display:flex; flex-direction:column;
+    padding:0 22px;
+  }
+  .rounds-header{
+    display:flex; align-items:center; gap:14px;
+    padding:22px 2px 18px;
+    border-bottom:2px double var(--gold);
+    flex-shrink:0;
+  }
+  .rounds-header h2{
+    font-size:1.15rem;
+    letter-spacing:0.18em;
+    margin:0;
+    color:var(--ink);
+    font-weight:600;
+  }
+  .nav-back{
+    background:none; border:1px solid var(--ink-soft);
+    color:var(--ink-soft);
+    width:36px; height:36px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1rem;
+    cursor:pointer;
+    transition:transform .15s, border-color .15s, color .15s, background .15s;
+    flex-shrink:0;
+  }
+  .nav-back:hover{ border-color:var(--shu); color:var(--shu-deep); }
+  .nav-back:active{ transform:scale(.9); }
+
+  .round-scroll{ flex:1; overflow-y:auto; padding:26px 2px 40px; }
+  .round-grid{
+    display:grid;
+    grid-template-columns:repeat(6, 1fr);
+    gap:14px;
+  }
+  .round-btn{
+    background:var(--card);
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+    padding:clamp(12px,2.6vh,20px) 4px clamp(10px,2vh,16px);
+    font-size:0.86rem;
+    cursor:pointer;
+    text-align:center;
+    letter-spacing:0.02em;
+    position:relative;
+    overflow:hidden;
+    opacity:0;
+    transform:translateY(10px);
+    animation:riseCard .45s ease forwards;
+    transition:border-color .18s, transform .18s, box-shadow .18s;
+  }
+  @keyframes riseCard{ to{ opacity:1; transform:translateY(0); } }
+  .round-btn:hover{ border-color:var(--shu); transform:translateY(-3px); box-shadow:0 8px 18px -10px rgba(36,32,25,.4); }
+  .round-btn:active{ transform:translateY(0) scale(.95); }
+  .round-btn .n{
+    display:block;
+    font-family:'Shippori Mincho',serif;
+    font-weight:800;
+    font-size:1.25rem;
+    letter-spacing:0.02em;
+    white-space:nowrap;
+    color:var(--shu);
+    margin-bottom:4px;
+  }
+  .round-btn .cnt{
+    display:block;
+    font-size:0.68rem;
+    white-space:nowrap;
+    color:var(--ink-soft);
+    opacity:.75;
+  }
+  .ripple{
+    position:absolute; border-radius:50%;
+    background:rgba(163,57,42,0.25);
+    transform:scale(0);
+    animation:rippleAnim .55s ease-out forwards;
+    pointer-events:none;
+  }
+  @keyframes rippleAnim{ to{ transform:scale(3.4); opacity:0; } }
+
+  @media (max-height:820px){
+    .rounds-header{ padding:14px 2px 12px; }
+    .round-scroll{ padding:16px 2px 24px; }
+  }
+
+  /* ============ WORD VIEWER SCREEN ============ */
+  #screen-words{
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(163,57,42,0.06), transparent 55%),
+      var(--paper);
+    color:var(--ink);
+  }
+  .words-chrome{
+    position:absolute; top:0; left:0; right:0;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 18px;
+    z-index:5;
+    background:linear-gradient(to bottom, rgba(242,234,217,0.92), transparent);
+  }
+  .words-chrome .nav-back{ border-color:var(--ink-soft); color:var(--ink-soft); }
+  .words-chrome .nav-back:hover{ border-color:var(--shu); color:var(--shu-deep); }
+  .progress-label{
+    font-size:0.72rem;
+    letter-spacing:0.15em;
+    color:var(--ink-soft);
+  }
+  .chrome-right{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .nav-list{
+    background:var(--card);
+    border:1px solid var(--gold);
+    color:var(--shu-deep);
+    font-family:'Shippori Mincho',serif;
+    font-weight:700;
+    font-size:0.78rem;
+    letter-spacing:0.15em;
+    padding:7px 14px;
+    border-radius:3px;
+    cursor:pointer;
+    transition:transform .15s, box-shadow .15s;
+  }
+  .nav-list:hover{ box-shadow:0 4px 12px -6px rgba(163,57,42,0.4); }
+  .nav-list:active{ transform:scale(.94); }
+
+  .list-overlay{
+    position:absolute; inset:0;
+    z-index:20;
+    background:rgba(36,32,25,0.42);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .3s ease;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+  }
+  .list-overlay.open{
+    opacity:1;
+    pointer-events:auto;
+  }
+  .list-panel{
+    width:100%;
+    max-width:640px;
+    max-height:78%;
+    background:var(--paper);
+    border-top:3px double var(--gold);
+    border-radius:14px 14px 0 0;
+    box-shadow:0 -18px 40px -18px rgba(36,32,25,0.5);
+    display:flex;
+    flex-direction:column;
+    transform:translateY(24px);
+    transition:transform .35s cubic-bezier(.2,.8,.3,1);
+  }
+  .list-overlay.open .list-panel{ transform:translateY(0); }
+  .list-panel-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:16px 20px;
+    border-bottom:1px solid var(--line);
+    flex-shrink:0;
+  }
+  .list-panel-header h3{
+    margin:0;
+    font-size:1rem;
+    letter-spacing:0.1em;
+    color:var(--ink);
+  }
+  .list-panel-header .nav-back{ border-color:var(--ink-soft); color:var(--ink-soft); font-size:1.1rem; }
+  .list-grid{
+    overflow-y:auto;
+    padding:16px 18px 28px;
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(120px,1fr));
+    gap:10px;
+  }
+  .list-chip{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-left:3px solid var(--shu);
+    padding:10px 12px;
+    text-align:left;
+    cursor:pointer;
+    font-family:'Shippori Mincho',serif;
+    transition:border-color .15s, transform .15s, background .15s;
+  }
+  .list-chip:hover{ border-color:var(--shu); transform:translateY(-2px); }
+  .list-chip:active{ transform:translateY(0) scale(.97); }
+  .list-chip.current{ background:rgba(163,57,42,0.1); border-left-color:var(--shu-deep); }
+  .list-chip .li-idx{
+    font-size:0.65rem;
+    color:var(--ink-soft);
+    letter-spacing:0.1em;
+  }
+  .list-chip .li-word{
+    display:block;
+    font-size:1rem;
+    font-weight:700;
+    color:var(--ink);
+    margin:2px 0 3px;
+  }
+  .list-chip .li-mean{
+    display:block;
+    font-size:0.72rem;
+    color:var(--ink-soft);
+    line-height:1.5;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+  }
+  .progress-rail{
+    position:absolute; top:0; bottom:0; right:6px;
+    width:3px;
+    background:rgba(74,66,53,0.12);
+    z-index:5;
+  }
+  .progress-fill{
+    position:absolute; top:0; left:0; right:0;
+    height:0%;
+    background:var(--shu);
+    transition:height .35s ease;
+  }
+
+  .words-container{
+    height:100%;
+    overflow-y:scroll;
+    scroll-snap-type:y mandatory;
+    scroll-behavior:smooth;
+  }
+  .page{
+    height:calc(var(--vh, 1vh) * 100);
+    scroll-snap-align:start;
+    scroll-snap-stop:always;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    padding:70px 16px 40px;
+    opacity:0.28;
+    transform:scale(0.92);
+    transition:opacity .5s ease, transform .5s ease;
+  }
+  .page.active{
+    opacity:1;
+    transform:scale(1);
+  }
+  .page::before{
+    content:"";
+    position:absolute; inset:14px;
+    border:1px solid rgba(163,128,63,0.28);
+    pointer-events:none;
+  }
+  .page-idx-mark{
+    position:absolute;
+    bottom:18px; left:50%;
+    transform:translateX(-50%);
+    font-size:0.68rem;
+    letter-spacing:0.3em;
+    color:var(--ink-soft);
+  }
+
+  .tate-flow{
+    writing-mode:vertical-rl;
+    text-orientation:mixed;
+    height:min(72vh, 560px);
+    max-width:88vw;
+    columns:1;
+    column-width:168px;
+    column-gap:30px;
+    overflow-x:auto;
+    overflow-y:hidden;
+    padding:4px 6px;
+    scrollbar-width:thin;
+  }
+  .tate-flow::-webkit-scrollbar{ height:4px; }
+  .tate-flow::-webkit-scrollbar-thumb{ background:rgba(201,187,153,0.25); }
+
+  .tate-headword{
+    font-family:'Shippori Mincho', serif;
+    font-weight:800;
+    font-size:clamp(2rem, 7vw, 2.9rem);
+    margin:0 0 14px;
+    color:var(--ink);
+    line-height:1.25;
+  }
+  .tate-headword .ch{
+    opacity:0;
+    filter:blur(3px);
+  }
+  .page.active .tate-headword .ch{
+    animation:chInWord .5s ease forwards;
+  }
+  @keyframes chInWord{
+    to{ opacity:1; filter:blur(0); }
+  }
+  .tate-pos{
+    display:inline-block;
+    font-size:0.68rem;
+    color:var(--ai);
+    border:1px solid var(--ai);
+    padding:2px 5px;
+    margin:0 0 18px;
+    border-radius:2px;
+  }
+  .tate-meaning{
+    font-size:1.05rem;
+    font-weight:700;
+    color:var(--shu-deep);
+    margin:0 0 22px;
+    line-height:2;
+  }
+  .tate-block{
+    font-size:0.86rem;
+    color:var(--ink-soft);
+    margin:0 0 22px;
+    line-height:2.05;
+    opacity:0;
+    transform:translateY(8px);
+  }
+  .page.active .tate-block{
+    animation:blockIn .6s ease forwards;
+  }
+  .tate-block .tag{
+    display:inline-block;
+    font-size:0.68rem;
+    letter-spacing:0.1em;
+    color:var(--gold);
+    border-bottom:1px solid var(--gold);
+    margin-bottom:8px;
+    padding-bottom:2px;
+  }
+  .tate-block.mne .tag{ color:var(--ai); border-color:var(--ai); }
+  .tate-block.ex .tag{ color:var(--shu); border-color:var(--shu); }
+  .tate-block .ex-text{
+    font-family:'Shippori Mincho', serif;
+    font-weight:600;
+    font-size:0.98rem;
+    color:var(--ink);
+    margin:0 0 6px;
+  }
+  .tate-block .ex-trans{ font-size:0.78rem; color:var(--ink-soft); margin:0; }
+  .tate-block .ex-src{
+    display:inline-block;
+    margin-top:8px;
+    font-size:0.64rem;
+    color:var(--shu-deep);
+    border:1px solid var(--shu);
+    padding:1px 6px;
+    border-radius:2px;
+  }
+  @keyframes blockIn{ to{ opacity:1; transform:translateY(0); } }
+
+  .scroll-cue{
+    position:absolute;
+    bottom:16px; right:22px;
+    writing-mode:vertical-rl;
+    font-size:0.65rem;
+    letter-spacing:0.3em;
+    color:var(--ink-soft);
+    display:flex; align-items:center; gap:6px;
+    animation:cueBounce 1.8s ease-in-out infinite;
+  }
+  @keyframes cueBounce{
+    0%,100%{ transform:translateY(0); opacity:.7; }
+    50%{ transform:translateY(6px); opacity:1; }
+  }
+
+  @media (max-height:820px){
+    .page{ padding:56px 16px 30px; }
+    .tate-flow{ height:min(68vh, 470px); }
+    .tate-headword{ font-size:clamp(1.6rem, 6vw, 2.3rem); margin-bottom:10px; }
+    .tate-meaning{ margin-bottom:16px; }
+    .tate-block{ margin-bottom:16px; font-size:0.8rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation:none !important; transition:none !important; }
+  }
+</style>
+<style id="kobun-patch2">
+.round-btn .dg{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:.62rem;line-height:1.45;color:var(--ink-soft);opacity:.75;margin-top:6px;white-space:normal}
+.round-btn.weak-btn .n{color:var(--ai)}
+.round-btn.weak-btn:disabled{animation:none;opacity:.45;transform:none;cursor:default}
+.rounds-header .hd-r{margin-left:auto;display:flex;gap:8px}
+.reveal-btn{font-size:1.05rem;padding:14px 38px;bottom:calc(52px + env(safe-area-inset-bottom,0px))}
+.star-btn{position:absolute;right:calc(18px + env(safe-area-inset-right,0px));top:calc(64px + env(safe-area-inset-top,0px));z-index:6;width:44px;height:44px;border-radius:50%;border:1px solid var(--gold);background:var(--card);color:var(--gold);font-size:1.3rem;line-height:1;cursor:pointer;padding:0}
+.star-btn.on{background:var(--shu);border-color:var(--shu);color:#fff}
+#searchOverlay{align-items:flex-start;z-index:30}
+#searchOverlay .list-panel{border-top:0;border-bottom:3px double var(--gold);border-radius:0 0 14px 14px;max-height:85%;transform:translateY(-24px)}
+#searchOverlay.open .list-panel{transform:none}
+.list-panel-header input{flex:1;min-width:0;margin-right:12px;padding:10px 12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:1rem;border-radius:4px}
+.sr-empty{grid-column:1/-1;margin:8px 2px;font-size:.8rem;color:var(--ink-soft)}
+.round-cell{display:flex;flex-direction:column;gap:6px}
+.weak-sub{background:var(--card);border:1px solid var(--line);color:var(--ai);font-family:inherit;font-weight:700;font-size:.74rem;letter-spacing:.04em;padding:8px 4px;border-radius:2px;cursor:pointer}
+.weak-sub:not(:disabled):hover{border-color:var(--ai)}
+.weak-sub:disabled{opacity:.4;cursor:default}
+.restart-btn{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(52px + env(safe-area-inset-bottom,0px));z-index:6;background:var(--shu);border:1px solid var(--shu);color:#fff;font-family:inherit;font-weight:700;font-size:1.05rem;letter-spacing:.15em;padding:14px 48px;border-radius:3px;cursor:pointer;white-space:nowrap}
+.page.last .reveal-btn{display:none}
+.words-container{scroll-behavior:auto}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+html,body,button,.page{touch-action:manipulation}
+.chrome-right{min-width:0}
+.nav-list,.words-chrome .nav-back{white-space:nowrap;flex-shrink:0}
+#toggleQuiz{min-width:6em;text-align:center}
+.progress-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.page.last{padding-bottom:calc(112px + env(safe-area-inset-bottom,0px))}
+.page.last .tate-flow{max-height:calc(var(--vh,1vh)*100 - 188px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+@media (max-width:480px){.progress-label{display:none}}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- TITLE SCREEN -->
+  <section id="screen-title" class="screen active">
+    <div class="title-stage">
+      <div class="title-frame">
+        <h1 class="title-vertical" id="titleText"></h1>
+      </div>
+      <p class="tap-hint">タップして はじめる</p>
+    </div>
+  </section>
+
+  <!-- ROUND SELECT SCREEN -->
+  <section id="screen-rounds" class="screen">
+    <div class="rounds-header">
+      <button class="nav-back" id="backToTitle">◁</button>
+      <h2>回 を 選 ぶ</h2>
+    </div>
+    <div class="round-scroll">
+      <div class="round-grid" id="roundGrid"></div>
+    </div>
+  </section>
+
+  <!-- WORD VIEWER SCREEN -->
+  <section id="screen-words" class="screen">
+    <div class="words-chrome">
+      <button class="nav-back" id="backToRounds">◁</button>
+      <div class="chrome-right">
+        <div class="progress-label" id="progressLabel"></div>
+        <button class="nav-list" id="openList">目次</button>
+      </div>
+    </div>
+    <div class="progress-rail"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="words-container" id="wordsContainer"></div>
+
+    <div class="list-overlay" id="listOverlay">
+      <div class="list-panel">
+        <div class="list-panel-header">
+          <h3 id="listPanelTitle"></h3>
+          <button class="nav-back" id="closeList">×</button>
+        </div>
+        <div class="list-grid" id="listGrid"></div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+const ROUNDS = [
+{id:1, words:[
+ {w:"あいなし", pos:"形", mean:"つまらない／気にくわない／わけもなく", expl:"「愛（あい）」＋「無し」から、相手に愛着や好感が持てない気持ちを表し、そこから広く「おもしろくない・不都合だ」の意に発展した語。", mne:"「愛（あい）」が「無し」＝愛情が湧かない→つまらない、と丸ごと覚える。", ex:{t:"いふもあいなし。",tr:"言うのもつまらない。"}},
+ {w:"あからさまなり", pos:"形動", mean:"①急だ・突然だ　②かりそめだ・一時的だ", expl:"現代語の『あからさま（露骨）』とは意味が異なる要注意語。光がぱっと差してすぐ消えるイメージで、物事の一時性・突発性を表す。", mne:"「明るい」がパッと差してすぐ消える→『一瞬だけ・急に』と結びつける。", ex:{t:"あからさまに立ち出でて、すなはち帰りぬ。",tr:"ちょっとの間だけ外に出て、すぐに帰った。"}},
+ {w:"あく", pos:"動（四段）", mean:"十分に満足する・満ち足りる／いやになる・飽きる／〔補助動詞〕十分に…する", expl:"『満ち足りる』が本来の意味で、そこから『いやになる・飽きる』の意も生じた。中古以降は『あかず』『あかで』の形で用いられることが多い。", mne:"『飽く』はまず『十分に満足する』。『あかず』＝満足しない・名残惜しい、と形で覚える。", ex:{t:"見るにあかぬ心地す。",tr:"見ていて飽きない（満足しない）気持ちがする。"}},
+ {w:"あさまし", pos:"形", mean:"驚きあきれるほどだ・（程度が）ひどい・情けない", expl:"良い意味にも悪い意味にも使え、とにかく『驚きの度合いが甚だしい』ことを表す評価語。", mne:"現代語『あさましい』（見苦しい）よりもまず『驚きあきれる』の意味を先に思い出す。", ex:{t:"あさましきまで泣きたまふ。",tr:"あきれるほどひどくお泣きになる。"}},
+ {w:"あした", pos:"名", mean:"朝", expl:"現代語『明日』とは異なり、古文では単に『朝』を意味する最頻出の同音異義語。対義語は『ゆふべ（夕方）』。", mne:"『あした』と『ゆふべ』はセットで『朝と夕方』のペアとして覚える。", ex:{t:"あしたに見れば、露なほ置きたり。",tr:"朝に見ると、露がまだ置いていた。"}},
+ {w:"あそび", pos:"名", mean:"神前での歌舞・音楽（神遊び）／山野での狩猟・行楽・酒宴／詩歌・管弦の催し／遊戯・娯楽／遊女", expl:"現代語の『遊び』よりも、和歌・管弦・詩歌などを楽しむ風雅な催しを指すことが多い。神前の歌舞や、狩猟・酒宴などの野外の遊興も指す。", mne:"①神前の歌舞②狩猟・酒宴③管弦の催し、の三つ。中古の作品では③が中心。", ex:{t:"月の夜、御あそびあり。",tr:"月の美しい夜に、管弦の催しがあった。"}},
+ {w:"あだなり", pos:"形動", mean:"不誠実だ・浮気っぽい・はかない・むだだ", expl:"漢字を当てると『徒なり』。実（じつ）がなく、誠実さや実りに欠ける様子を表し、恋愛関係の移り気にもよく使われる。", mne:"『あだ』＝『徒（あだ）』＝無駄・実りなし、とイメージする。", ex:{t:"あだなる契りをば頼まじ。",tr:"不誠実な約束を頼りにはすまい。"}},
+ {w:"あたらし", pos:"形", mean:"惜しい・もったいない", expl:"現代語『新しい』とはまったく別の語で、入試最頻出の紛らわしい語。『あたら（惜）』が語源。", mne:"『新しい』と混同しないよう、『あたら＝惜しい』とセットで唱えて覚える。", ex:{t:"あたらしき人を失ひつるかな。",tr:"惜しい人を失ってしまったことよ。"}},
+ {w:"あぢきなし", pos:"形", mean:"どうにもならない・つまらない・道理に合わない", expl:"物事が思うようにいかず、どうしようもない空しさや不快感を表す語。", mne:"現代語『味気ない』のニュアンスに重ねて『どうにもならない』を覚える。", ex:{t:"あぢきなき世なりけり。",tr:"どうにもならない世の中であったよ。"}},
+ {w:"あてなり", pos:"形動", mean:"高貴だ・上品だ", expl:"漢字を当てると『貴なり』。身分の高さや気品の良さを表す。", mne:"『あて』＝『貴（あて）』で、皇族・貴族の気品を思い浮かべる。", ex:{t:"あてなる人の御ありさまなり。",tr:"気品のある方のご様子である。"}},
+ {w:"あない", pos:"名", mean:"案内・取り次ぎ・様子", expl:"現代語の『案内』に近いが、来訪を取り次いでもらう動作そのものを指すことも多い。", mne:"現代語とほぼ同じ意味なので、漢字『案内』をそのまま当てて覚える。", ex:{t:"あないせさせて入りたまふ。",tr:"取り次ぎをさせてお入りになる。"}},
+ {w:"あながちなり", pos:"形動", mean:"無理やりだ・ひたすらだ・強引だ", expl:"下に打消を伴うと『必ずしも～ない』という訳になる重要語。", mne:"『強ち（あながち）』＝無理に、下に『ず』があれば『必ずしも～ない』と変換する。", ex:{t:"あながちに恋ひわたる。",tr:"ひたすらに恋い慕い続ける。"}},
+ {w:"あなかま", pos:"感動詞", mean:"ああ、やかましい・静かにしなさい", expl:"『あな（ああ）』＋『かまし（やかましい）』の略で、人を制止するときに発する言葉。", mne:"『あな（ああ）』＋『かまし』→『静かに！』と一語で叫ぶ場面を想像する。", ex:{t:"あなかま、人聞かむ。",tr:"ああ、静かに。人に聞かれてしまう。"}},
+ {w:"あはれなり", pos:"形動", mean:"しみじみと心打たれる・趣深い／かわいい・いとしい／気の毒だ・かわいそうだ／尊い・ありがたい", expl:"心にしみじみと迫る感動全般を表す、日本文学の美意識の中核をなす最重要語。神仏を崇める気持ちで『尊い・ありがたい』の意にもなる。感動詞・名詞の『あはれ』（しみじみとした感慨）もあわせて押さえる。", mne:"感動詞『あはれ（ああ）』から発展した語で、『しみじみ感じる』が基本イメージ。", ex:{t:"三つ四つ、二つ三つなど飛び急ぐさへあはれなり。",tr:"（烏が）三つ四つ、二つ三つと飛び急ぐ様子までもがしみじみと趣深い。",s:"枕草子（第一段・秋）"}},
+ {w:"あふ", pos:"動（四段）", mean:"出会う・巡り合う／結婚する・男女が深い関係を結ぶ／対する・向かう／争う・戦う／〔補助動詞〕互いに…し合う", expl:"基本は『出会う』で、男女が契りを結ぶ意味でもよく用いられる。人に向かう意、争う意もある。『わびあふ』のように補助動詞で使うと『互いに…し合う』の意になる。", mne:"まず『出会う』。恋の文脈では『結ばれる』と訳す。『わびあへる』なら『互いに嘆き合う』。", ex:{t:"限りなく遠くも来にけるかなとわびあへるに。",tr:"この上もなく遠くまでも来てしまったものだなあと、互いに嘆き合っていると。",s:"伊勢物語　九"}},
+]},
+{id:2, words:[
+ {w:"あへず", pos:"連語", mean:"～しきれない・～できない", expl:"動詞の連用形に付いて『最後まで～しきれない』という不可能・限界を表す。", mne:"『敢（あ）へず』＝敢えてしきれない→『～しきれない』と訳す。", ex:{t:"もの言ひもあへず泣きぬ。",tr:"言葉も言いきれずに泣いてしまった。"}},
+ {w:"あへなし", pos:"形", mean:"あっけない・どうしようもない", expl:"張り合いがなく、あっけなく終わってしまう様子を表す語。", mne:"『敢へ無し』＝手ごたえが無い→『あっけない』と結びつける。", ex:{t:"あへなく討たれぬ。",tr:"あっけなく討たれてしまった。"}},
+ {w:"あやし", pos:"形", mean:"不思議だ・身分が低い・粗末だ", expl:"『怪し』（不思議）と『賤し』（身分が低い）の両方の意味を持つ多義語で文脈判断が必要。", mne:"『怪しい人＝身分の低い人』という連想で二つの意味を一度に覚える。", ex:{t:"あやしき身なれど許されたり。",tr:"身分の低い身であるが許された。"}},
+ {w:"あやなし", pos:"形", mean:"筋道が立たない・わけがわからない", expl:"『文目（あや）無し』で、物事の道理や模様が乱れて判別できない様子を表す。", mne:"『文目（あや）』＝模様・筋道が『無し』→わけがわからない、と漢字で覚える。", ex:{t:"あやなきことを言ふ。",tr:"わけのわからないことを言う。"}},
+ {w:"あやにくなり", pos:"形動", mean:"意地が悪い・あいにくだ・（程度が）ひどい", expl:"物事が都合悪く進む様子、また人の性質が意地悪いことを表す。", mne:"現代語『あいにく』の語源で、『都合が悪い』を軸に覚える。", ex:{t:"あやにくに雨降りぬ。",tr:"あいにく雨が降ってしまった。"}},
+ {w:"あらぬ", pos:"連体詞", mean:"意外な・思いがけない・別の", expl:"『あり』の未然形『あら』＋打消『ぬ』が連体詞化し、『そうではない』という意外性を表す。", mne:"『あら（ず）＋ぬ』→『そうではない方の』→『意外な・別の』と展開して覚える。", ex:{t:"あらぬ方をながめやる。",tr:"見当違いの方角を眺めやる。"}},
+ {w:"あらまし", pos:"名", mean:"前もっての予想・計画・あらすじ", expl:"物事が起こる前にあらかじめ思い描く内容を指す。現代語『あらまし（大要）』にも通じる。", mne:"『あらかじめ』の『あら』から『前もっての予定・概要』を連想する。", ex:{t:"行く末のあらましを語る。",tr:"将来の見通し・計画を語る。"}},
+ {w:"あらまほし", pos:"形", mean:"理想的だ・そうあってほしい", expl:"『あり』の未然形に願望の助動詞『まほし』が付いた語が形容詞化したもの。", mne:"『あり＋まほし（願望）』＝『こうあってほしい』＝理想的、と語構成から覚える。", ex:{t:"かくこそあらまほしけれ。",tr:"このようにあってほしいものだ。"}},
+ {w:"ありがたし", pos:"形", mean:"めったにない・珍しい／めったにないほど優れている・貴重だ／（世が）生きにくい・むずかしい", expl:"『有ることが難しい＝珍しい』が原義で、現代語の『感謝』の意味ではない。世の中が過ごしにくい、物事がむずかしいの意にもなる。", mne:"『有り難し』＝存在するのが難しい→『めったにない』。そこから『めったにないほど優れている』へ広がると覚える。", ex:{t:"ありがたきもの。舅にほめらるる婿。",tr:"めったにないもの。（それは）舅にほめられる婿。",s:"枕草子　ありがたきもの"}},
+ {w:"ありく", pos:"動（四段）", mean:"歩く・外出する・訪問する／動き回る・行き来する／〔補助動詞〕…してまわる／ずっと…して過ごす", expl:"人だけでなく動物・車・舟などの移動にも広く用いる。一歩一歩の歩行は『あゆむ』。補助動詞では『…してまわる』『ずっと…して過ごす』の意になる。", mne:"『ありく』は広く移動することを表す語。一歩ずつの歩行は『あゆむ』と区別して覚える。", ex:{t:"野辺をありきたまふ。",tr:"野辺を歩き回りなさる。"}},
+ {w:"ありつる（ありし）", pos:"連体詞", mean:"先ほどの・前に述べた", expl:"『あり』の連体形が過去の出来事を指し示す表現として定着したもの。", mne:"『ありつる』＝『あった、あの』と、直前の出来事を指す指示語として覚える。", ex:{t:"ありつる人はいづこへか行きぬる。",tr:"先ほどの人はどこへ行ってしまったのか。"}},
+ {w:"あるじ（す）", pos:"名／動", mean:"主人／ご馳走する・もてなす", expl:"名詞では『主人』、サ変動詞化すると『饗応する・もてなす』の意味になる。", mne:"『あるじす』は『主人としてもてなす』と動詞化した形で覚える。", ex:{t:"あるじまうけしたまふ。",tr:"主人としてご馳走を用意なさる。"}},
+ {w:"いうげんなり", pos:"形動", mean:"優雅だ・上品だ", expl:"優れた美しさ・上品さを称える語で、和歌や人物の趣を評する際に用いられる。", mne:"『優』の字のイメージそのまま『優雅・上品』と覚える。", ex:{t:"いうげんなる姿にぞありける。",tr:"優雅で上品な姿であった。"}},
+ {w:"いかが", pos:"副", mean:"どう・どのように・どうして", expl:"状態や方法を問う疑問、また反語表現にも用いられる。", mne:"現代語『いかが（ですか）』とほぼ同じ感覚で使える。", ex:{t:"いかがすべき。",tr:"どうしたらよいか。"}},
+ {w:"いかで", pos:"副", mean:"どうにかして（願望）／どうして（疑問・反語）", expl:"下に意志・願望表現を伴えば『なんとかして』、疑問語として使えば『どうして』となる。", mne:"下に『ばや・む』などの願望があれば『なんとかして』と訳す、とセットで覚える。", ex:{t:"いかで見ばや。",tr:"なんとかして見たいものだ。"}},
+]},
+{id:3, words:[
+ {w:"いかに", pos:"副", mean:"どのように・どんなに", expl:"状態・程度を問う疑問副詞で、会話の呼びかけにも使われる。", mne:"『いかに』は『いかが』の仲間で『どのように』の意味と覚える。", ex:{t:"いかに思すらむ。",tr:"どのようにお思いだろうか。"}},
+ {w:"いそぎ", pos:"名", mean:"準備・急ぐこと", expl:"何かのために急いで用意を整えることを指す名詞。", mne:"『急ぎ』＝急いで行う『準備』と覚える。", ex:{t:"旅のいそぎをす。",tr:"旅の準備をする。"}},
+ {w:"いたく", pos:"副", mean:"ひどく・たいそう", expl:"程度の甚だしさを表す副詞。下に打消を伴うと『たいして～ない』となる。", mne:"『甚く（いたく）』＝『痛いほど』ひどく、と語感で覚える。", ex:{t:"いたく心細し。",tr:"ひどく心細い。"}},
+ {w:"いたづらなり", pos:"形動", mean:"つまらない・むなしい／無駄だ・無意味だ／手持ちぶさただ・ひまだ／何もない・空だ／〔いたづらになる〕死ぬ", expl:"現代語『いたずら（悪ふざけ）』とは異なり、『空しい・無為だ』を表す。『いたづらになる』の形で、無駄になる意のほか、死ぬ意にもなる。", mne:"『徒（いたづら）』＝実がない→『むなしい・無駄』。『いたづらになる』は『死ぬ』とも訳す、とセットで覚える。", ex:{t:"上人の感涙いたづらになりにけり。",tr:"上人が感激のあまりに流した涙は無意味になってしまった。",s:"徒然草　二三六"}},
+ {w:"いつく", pos:"動（四段）", mean:"大切に育てる・かしずく／（神に）斎き仕える", expl:"『斎く（心身を清めて神に仕える）』と『傅く（大切に世話をする）』の二つの漢字が当たる語。入試では『大切に育てる』の意が問われやすい。", mne:"『かしづく』と同じ仲間（大切に育てる）と覚え、神に仕える意味はおまけで押さえる。", ex:{t:"姫君をいつきたまふ。",tr:"姫君を大切にお育てになる。"}},
+ {w:"いつしか", pos:"副", mean:"早く～したい（願望）／いつの間にか", expl:"下に願望表現を伴えば『早く～したい』、単独では『いつの間にか』の意。", mne:"『いつ＋しか（早く）』で『早くそうなってほしい』という気持ちを表す。", ex:{t:"いつしか梅咲かなむ。",tr:"早く梅が咲いてほしい。"}},
+ {w:"いと（いとど）", pos:"副", mean:"いと＝たいそう・非常に／いとど＝ますます・いよいよ・いっそう／そのうえさらに", expl:"『いと』は程度の甚だしさを表し、『いとど』はそれがさらに強まること、また事柄を付け加えることを表す。", mne:"『いと』＝とても、『いとど』＝ますます・そのうえさらに、と二語を並べて覚える。", ex:{t:"ところどころ語るを聞くに、いとどゆかしさまされど。",tr:"（物語の）ところどころを語ってくれるのを聞くと、ますます知りたい気持ちがつのるけれど。",s:"更級日記　かどで"}},
+ {w:"いとほし", pos:"形", mean:"かわいそうだ・いとおしい・気の毒だ", expl:"相手への同情や愛情から生まれる、心が痛むような気持ちを表す。", mne:"現代語『いとおしい』の語源で、『かわいそう＋愛しい』の両面を持つ。", ex:{t:"いとほしと思す。",tr:"かわいそうだとお思いになる。"}},
+ {w:"いぶかし", pos:"形", mean:"気がかりだ・知りたい・不審だ", expl:"はっきりせず疑わしいことを知りたいと思う気持ちを表す。", mne:"『いぶかしい』は現代語にもほぼ同じ形で残っているので直感で覚える。", ex:{t:"いぶかしくて問ひたまふ。",tr:"気がかりでお尋ねになる。"}},
+ {w:"いふかひなし", pos:"形", mean:"言ってもしかたない・どうしようもない／情けない・ふがいない・つまらない／身分が低い・いやしい／たわいない・幼稚だ", expl:"『言ふ甲斐無し』で、言うだけの価値がないのが本来の意味。そこから、ふがいない、身分が低い、幼稚だの意にも用いられる。", mne:"『言ふ＋甲斐（かひ）＋無し』。まず『言ってもしかたない』、文脈により『身分が低い・幼い』と訳し分ける。", ex:{t:"いで、あな幼や。いふかひなうものし給ふかな。",tr:"いやもう、まあ子供っぽいことよ。たわいなくいらっしゃることよ。",s:"源氏物語　若紫"}},
+ {w:"いまやう", pos:"名", mean:"当世風・現代風", expl:"『今様』と書き、その時代の流行・最新のスタイルを指す。", mne:"『今』＋『様（やう）』＝『今どきの様式』とそのまま覚える。", ex:{t:"いまやうの歌をうたふ。",tr:"当世風の歌をうたう。"}},
+ {w:"いみじ", pos:"形", mean:"（程度が）はなはだしい・すばらしい／ひどい", expl:"良い意味にも悪い意味にも使われる、程度の強さだけを表す最重要語。文脈判断が必須。", mne:"善悪どちらにも使う『ものすごい』という万能の強調語と覚える。", ex:{t:"いみじう泣きたまふ。",tr:"たいそうひどくお泣きになる。"}},
+ {w:"いやし", pos:"形", mean:"身分が低い・見苦しい・粗末だ", expl:"『賤し』の字を当て、身分の低さと、それに伴う見た目の粗末さの両方を表す。", mne:"現代語『卑しい』とほぼ同じ感覚でよい。", ex:{t:"いやしき身なれど。",tr:"身分の低い身であるけれども。"}},
+ {w:"うし", pos:"形", mean:"つらい・いやだ", expl:"心情的な苦しさ・嫌悪感を表す形容詞で、『憂し』の字を当てる。", mne:"『憂し（うし）』＝『憂鬱（ゆううつ）』の『憂』とつなげて覚える。", ex:{t:"世の中をうしと思ふ。",tr:"世の中をつらいと思う。"}},
+ {w:"うしろめたし", pos:"形", mean:"気がかりだ・不安だ", expl:"後ろに何か心配事が控えているような、落ち着かない不安を表す。", mne:"現代語『後ろめたい』（罪悪感）とは少しずれ、古文では単に『不安・心配』。", ex:{t:"行く末うしろめたし。",tr:"将来が気がかりだ。"}},
+]},
+{id:4, words:[
+ {w:"うしろやすし", pos:"形", mean:"安心だ", expl:"『うしろめたし』の対義語で、後を任せても安心だという気持ちを表す。", mne:"『うしろめたし』とセットで対義語として覚える（不安⇔安心）。", ex:{t:"後見あればうしろやすし。",tr:"後見人がいるので安心だ。"}},
+ {w:"うたてし", pos:"形／副（うたて）", mean:"いやな感じに・ますます（悪く）・情けなく", expl:"物事がどんどん悪い方向へ進んでいく、不快な変化を表す語。", mne:"『うたて』＝『うとましい方向へ移っていく』とイメージで覚える。", ex:{t:"うたてある世かな。",tr:"いやな感じの世の中だなあ。"}},
+ {w:"うつくし", pos:"形（シク活用）", mean:"かわいい・いとしい／きれいだ・立派だ", expl:"現代語『美しい』と違い、小さなもの・幼い者への愛情を伴う『かわいらしい』が中心義。中世以降に『きれいだ』の意が広がった。", mne:"『うつくし』＝まず『かわいい』。『きよらなり・めでたし』など美しさを表す語とは区別する。", ex:{t:"うつくしきもの。瓜にかきたるちごの顔。",tr:"かわいらしいもの。瓜に描いた幼児の顔。",s:"枕草子（うつくしきもの）"}},
+ {w:"うつろふ", pos:"動（四段）", mean:"移動する・移り住む／色あせる・さめる・なくなる／紅葉する／（花・葉が）散る／心変わりする／顔色が変わる・青ざめる／変わり果てる・衰える", expl:"『移る』『映る』の未然形に反復継続の助動詞『ふ』が付いた語。物や人が移る意から、色があせる・散る・紅葉する、さらに心や顔色が変わる意まで広く用いる。", mne:"『移ろふ』＝『移る』が続く。①移り住む②色があせる③散る④心が移る、と広がりを順に唱える。", ex:{t:"待ちし桜もうつろひにけり。",tr:"待ちこがれた桜の花も（知らないうちに）散ってしまったことだ。",s:"古今集　春下"}},
+ {w:"うるはし", pos:"形", mean:"端正だ・きちんとしている・立派だ", expl:"整然として乱れのない美しさを表す語で、単なる『美しい』より秩序を強調する。", mne:"現代語『麗しい』の語源で、『整った美しさ』とイメージする。", ex:{t:"うるはしき装束にてあり。",tr:"きちんと整った装束である。"}},
+ {w:"うれふ", pos:"動（下二段）", mean:"嘆く・心配する・（正式に）訴える", expl:"心を痛めて嘆いたり、時に朝廷などへ正式に訴え出ることを表す。", mne:"『憂ふ』＝『憂い』を『訴える・嘆く』、と漢字から覚える。", ex:{t:"世をうれへて過ぐす。",tr:"世の中を嘆きながら過ごす。"}},
+ {w:"え（～ず）", pos:"副", mean:"～できない", expl:"下に打消を伴って不可能を表す呼応の副詞。", mne:"『え』を見たら文末に『ず・じ』などの打消を探す、とセットで覚える。", ex:{t:"え堪へず泣きぬ。",tr:"こらえきれずに泣いてしまった。"}},
+ {w:"えうなし", pos:"形", mean:"必要ない・つまらない・役に立たない", expl:"『用（えう）無し』で、必要性がなく無駄であることを表す。", mne:"『用（えう）』が『無し』＝必要ない、と漢字構成で覚える。", ex:{t:"えうなきものを持て来ぬ。",tr:"必要のない物を持ってきてしまった。"}},
+ {w:"えならず", pos:"連語", mean:"なんとも言えないほどすばらしい", expl:"『得（え）＋ならず』で、言葉で言い表すことができないほどの称賛を表す。", mne:"『え（言え）』＋『ならず』＝言い表せない→最上級の褒め言葉と覚える。", ex:{t:"えならぬ匂ひぞする。",tr:"なんとも言えないほどすばらしい香りがする。"}},
+ {w:"えんご（修辞法）", pos:"名（修辞法）", mean:"縁語（意味の関連する語を散りばめる技法）", expl:"和歌の中で、ある語と意味的に関連の深い語を意図的に配置する修辞技法。", mne:"『縁』のある語（えんご）をつなげる技法、と漢字の意味から直接覚える。", ex:{t:"「露」と「消ゆ」とは縁語なり。",tr:"『露』と『消ゆ』は縁語である。"}},
+ {w:"えんなり", pos:"形動", mean:"艶やかだ・優美だ", expl:"『艶』の字を当て、なまめかしく美しい魅力を表す。", mne:"漢字『艶』のイメージそのまま『艶やか・優美』と覚える。", ex:{t:"えんなる姿にてものしたまふ。",tr:"艶やかで優美な姿でいらっしゃる。"}},
+ {w:"おきつ", pos:"動（下二段）", mean:"（あらかじめ）定めておく・決めておく／指図する・命令する／管理する", expl:"『掟つ』と書き、あらかじめ取り決める意が基本。人に指図して何かをさせる、また物を管理する意でも用いる。", mne:"『掟（おきて）』を作るのが『おきつ』。『定める・指図する・管理する』の三つを押さえる。", ex:{t:"人をおきてて、事を行はす。",tr:"人に指図して、物事を行わせる。"}},
+ {w:"おくる", pos:"動（下二段）", mean:"先立たれる・死に後れる・遅れる", expl:"『後る』の字が示す通り、人に先立たれて自分だけ取り残される意味が重要。", mne:"『後（おく）れる』＝人より後に残される＝先立たれる、と語源から覚える。", ex:{t:"先立たれておくれぬ。",tr:"先立たれて自分だけ取り残された。"}},
+ {w:"おこす", pos:"動（下二段）", mean:"よこす・こちらへ送ってくる", expl:"相手が自分の方に向けて何かを送ってくる動作を表す。", mne:"『遣（や）る』（あちらへ送る）の対義語として『よこす』とセットで覚える。", ex:{t:"文をおこす。",tr:"手紙をよこす。"}},
+ {w:"おこなひ", pos:"名", mean:"勤行・仏道修行", expl:"仏道に関する日々の勤め・修行そのものを指す仏教用語。", mne:"『行い』が仏道における『お勤め』を指すと文脈から覚える。", ex:{t:"おこなひ怠らず勤む。",tr:"勤行を怠らずに勤める。"}},
+]},
+{id:5, words:[
+ {w:"おとなし", pos:"形", mean:"大人びている・思慮分別がある", expl:"現代語『おとなしい（従順）』ではなく、『大人（おとな）』らしい成熟や分別を表す。", mne:"『大人（おとな）』＋『し』＝大人らしい、と漢字から直接覚える。", ex:{t:"おとなしき心ばへなり。",tr:"大人びた思慮分別のある心づかいである。"}},
+ {w:"おとなふ", pos:"動（四段）", mean:"訪れる・音を立てる／便りをする", expl:"人を訪ねること、また物音を立てることを表す語で、『訪れ』の語源となった語。", mne:"『音（おと）』を立てて『訪ふ』＝訪れの気配、と語構成で覚える。", ex:{t:"人のおとなふ音す。",tr:"人が訪れてくる音がする。"}},
+ {w:"おどろおどろし", pos:"形", mean:"気味が悪い・仰々しい・大げさだ", expl:"不気味さや、物事の大げさで誇張された様子を表す。", mne:"『おどろ』を重ねた語で、驚くほど大げさ・不気味、と覚える。", ex:{t:"おどろおどろしき音のす。",tr:"気味の悪い（仰々しい）音がする。"}},
+ {w:"おどろく・おどろかす", pos:"動", mean:"はっと気づく・目を覚ます／びっくりする・驚く（おどろく）／びっくりさせる・気づかせる・目を覚まさせる（おどろかす）", expl:"現代語の『驚く』よりも『はっと気づく』『目を覚ます』が古文では中心だが、『びっくりする・驚く』の意味も並んで用いられる。他動詞『おどろかす』は『気づかせる・目を覚まさせる』。", mne:"自動詞『おどろく』＝はっと気づく・びっくりする、他動詞『おどろかす』＝気づかせる、と自他で分けて覚える。", ex:{t:"物音におどろく。",tr:"物音にはっと気づく。"}},
+ {w:"おのづから", pos:"副", mean:"自然に・ひとりでに／たまたま", expl:"人為でなく自然のなりゆきで物事が起こる様子を表す。", mne:"『自（おの）づから』＝『自ずから』とほぼ同じ漢字で覚えやすい。", ex:{t:"おのづから知らるることもあり。",tr:"自然と知られることもある。"}},
+ {w:"おはす", pos:"動", mean:"いらっしゃる（尊敬）", expl:"『あり・をり・行く・来』の尊敬語として幅広く使われる最重要敬語動詞。", mne:"『おはす』は『いる・行く・来る』何でも『いらっしゃる』と訳す万能敬語。", ex:{t:"宮おはします。",tr:"宮様がいらっしゃる。"}},
+ {w:"おぼえ", pos:"名", mean:"評判・寵愛・記憶", expl:"人からどう思われているか、特に主君からの寵愛の程度を表すことが多い。", mne:"『覚え』＝『人からの覚え（評価）がよい』という現代語の言い回しから覚える。", ex:{t:"おぼえめでたき人なり。",tr:"（主君からの）評判のすばらしい人である。"}},
+ {w:"おぼす", pos:"動（四段）", mean:"お思いになる（尊敬）", expl:"『思ふ』の尊敬語で、貴人の心中を敬って表す最重要敬語動詞の一つ。", mne:"『思ふ』の尊敬語として『思ふ→おぼす』と対応させて覚える。", ex:{t:"いかにおぼすらむ。",tr:"どのようにお思いだろうか。"}},
+ {w:"おぼつかなし", pos:"形", mean:"はっきりしない・気がかりだ・待ち遠しい", expl:"物事の正体や先行きが不明瞭で、不安や焦れったさを感じる様子を表す。", mne:"現代語『おぼつかない（足取りがあやふや）』のイメージから『不明瞭・不安』を覚える。", ex:{t:"行方おぼつかなし。",tr:"行方がはっきりしなくて気がかりだ。"}},
+ {w:"おほとのごもる", pos:"動", mean:"お休みになる（尊敬）", expl:"貴人が眠る・休むことを表す最高敬語の一つ。", mne:"『大殿（おほとの）ごもる』＝殿でお休みになる、と漢字イメージで覚える。", ex:{t:"はやくおほとのごもりぬ。",tr:"早くお休みになった。"}},
+ {w:"おぼゆ", pos:"動（下二段）", mean:"思われる・感じられる・似る", expl:"自発の意味が中心で、自然にそう感じられる・思い出されることを表す。", mne:"『おぼゆ』＝『覚（おぼ）ゆ』＝自然と心に浮かぶ、と自発の意味で覚える。", ex:{t:"昔のことおぼえて涙ぐむ。",tr:"昔のことが自然と思い出されて涙ぐむ。"}},
+ {w:"おもしろし", pos:"形", mean:"趣がある・風情がある・楽しい", expl:"現代語の『笑える』ではなく、景色や物事に心惹かれる趣深さを表す。", mne:"『面（おも）＋白し』＝目の前がぱっと明るく感じる趣深さ、とイメージする。", ex:{t:"おもしろき月の夜なりけり。",tr:"趣深い月夜であったよ。"}},
+ {w:"おもておこし", pos:"名", mean:"面目が立つこと・名誉を得ること", expl:"体面・評判が良い方向に立つことを表す。", mne:"『面（顔）』を『起こす』＝顔が立つ＝面目が立つ、と覚える。", ex:{t:"おもておこしなる出世をす。",tr:"面目の立つ出世をする。"}},
+ {w:"おもてぶせ", pos:"名", mean:"面目を失うこと・恥をかくこと", expl:"『おもておこし』の対義語で、体面をつぶされることを表す。", mne:"『面（顔）』を『伏せる』＝顔向けできない＝恥、と対義語セットで覚える。", ex:{t:"おもてぶせなることかな。",tr:"面目を失うことだなあ。"}},
+]},
+{id:6, words:[
+ {w:"おろかなり", pos:"形動", mean:"いいかげんだ・おろそかだ", expl:"現代語『愚か（ばか）』ではなく、物事への扱いが不十分・おろそかなことを表す。『～もおろかなり』で『～では言い尽くせない』の意にもなる。", mne:"『疎か（おろそか）』と同源、と考えて『扱いが不十分』を覚える。", ex:{t:"言ふもおろかなり。",tr:"言葉では言い尽くせないほどだ。"}},
+ {w:"かぎり", pos:"名", mean:"限界・限度／極限・最大限／あいだ・うち／全部・すべて／最後・果て・臨終／時期・機会／それだけ・そればかり", expl:"物事の限界点を表すのが基本。『…かぎり』で『～する間』、『むつましきかぎりは』で『親しい人はすべて』、『かぎりなく』で『この上なく』の意になる。", mne:"まず『限界』。①すべて②～している間③最期④機会、と用法ごとに訳し分ける。", ex:{t:"むつましきかぎりは、宵よりつどひて。",tr:"親しい人々はすべて、（前の）晩から集まって。",s:"おくのほそ道　旅立"}},
+ {w:"かくる", pos:"動（下二段）", mean:"隠れる・（貴人が）お亡くなりになる", expl:"姿を隠すことから転じて、高貴な人の死を婉曲に表す表現になる。", mne:"『隠（かく）る』＝この世から姿を隠す＝亡くなる、と婉曲表現として覚える。", ex:{t:"はかなくかくれたまひぬ。",tr:"あっけなくお亡くなりになった。"}},
+ {w:"かけことば（修辞法）", pos:"名（修辞法）", mean:"掛詞（同音の語に二つの意味を持たせる技法）", expl:"一つの音に複数の意味を掛けて和歌の表現を豊かにする修辞技法。", mne:"『松（まつ）』に『待つ』を掛ける、のような例で漢字通りに覚える。", ex:{t:"「ながめ」と「長雨」とは掛詞なり。",tr:"『眺め』と『長雨』は掛詞である。"}},
+ {w:"かしこし", pos:"形", mean:"もったいない・恐れ多い／恐ろしい・恐るべきだ／高貴だ・身分が高い／賢い・賢明だ・分別がある／すぐれている・立派だ／上手だ・巧みだ／都合がよい・ありがたい／〔かしこく〕盛大に・大いに", expl:"神仏や貴人に対する畏れ多さを表す【畏し】と、能力の優秀さを表す【賢し】の二つの系統がある。不吉な物を忌み避ける『ゆゆし』と違い、肯定的な畏敬の気持ちを持つ。", mne:"①恐れ多い②高貴だ③賢い④上手だ⑤盛大に、と五つを並べて唱える。", ex:{t:"かしこき仰せをかしこまりて承る。",tr:"恐れ多い仰せを謹んでお聞きする。"}},
+ {w:"かしづく", pos:"動（四段）", mean:"大切に育てる・世話をする", expl:"特に親が子（多くは娘）を大切に養育する様子を表す頻出語。", mne:"『傅（かしづ）く』＝かしずいて大切に世話する、とそのまま覚える。", ex:{t:"娘をかしづきたまふ。",tr:"娘を大切に育てなさる。"}},
+ {w:"かたくななり", pos:"形動", mean:"頑固だ・偏屈だ・無風流だ", expl:"考えが固く融通が利かない、また風流を解さない様子を表す。", mne:"現代語『頑（かたく）な』とほぼ同じ、『頑固』をそのまま覚える。", ex:{t:"かたくななる心にてあり。",tr:"頑固な心のありようだ。"}},
+ {w:"かたし", pos:"形", mean:"難しい・めったにない", expl:"『難し』の字を当て、実現困難・希少であることを表す。", mne:"『有り難し』の『難し』と同源、『めったにない』とつなげて覚える。", ex:{t:"ありがたく、かたきことなり。",tr:"めったになく、難しいことである。"}},
+ {w:"かたじけなし", pos:"形", mean:"恐れ多い・もったいない／面目ない・恥ずかしい／ありがたい（身に余る恩恵を受けて）", expl:"相手の身分の高さや厚意に対して、身に余るほどの畏れ・感謝を表すのが基本。自分の不甲斐なさを恥じる『面目ない・恥ずかしい』の意でも、平安期から用いられる。", mne:"①恐れ多い②面目ない③ありがたい、の三つ。『かたじけない』は現代語にも残る。", ex:{t:"かたじけなき仰せにこそ。",tr:"もったいないお言葉であることよ。"}},
+ {w:"かたたがへ", pos:"名", mean:"方違へ（凶の方角を避けて前夜別の場所に泊まる風習）", expl:"陰陽道に基づき、目的地の方角が悪い場合に一度別方向へ移動してから向かう習慣。", mne:"『方（かた）』を『違（たが）へ』る＝方角を変える、と漢字通りに覚える。", ex:{t:"方違へに出でたまふ。",tr:"方違えのためお出かけになる。"}},
+ {w:"かたち", pos:"名", mean:"容貌・容姿", expl:"現代語の『形』よりも、人の顔立ち・見た目の美しさを指すことが多い。", mne:"『かたち』は『姿かたち』の意で、まず『容貌』を思い出す。", ex:{t:"かたちうつくしき人なり。",tr:"容貌の美しい人である。"}},
+ {w:"かたはらいたし", pos:"形", mean:"そばで見ていて気の毒だ・きまりが悪い・苦々しい", expl:"『傍ら（かたわら）』＋『痛し』で、そばで見ている側が感じる気まずさを表す。", mne:"『傍らが痛い』＝横で見ていて心が痛む＝気の毒・きまり悪い、と覚える。", ex:{t:"見るもかたはらいたし。",tr:"見ていて気の毒だ（きまりが悪い）。"}},
+ {w:"かたほなり", pos:"形動", mean:"未熟だ・不完全だ", expl:"『片（かた）＋秀（ほ）なり』で、まだ十分に整っていない様子を表す。", mne:"『片』（不完全）＋『秀』で『まだ半人前』とイメージする。", ex:{t:"かたほなる筆の跡なり。",tr:"未熟な筆跡である。"}},
+ {w:"かたみに", pos:"副", mean:"互いに", expl:"双方が同じように何かをし合う様子を表す副詞。", mne:"『互（かたみ）に』は現代語『互いに』とほぼ同形で覚えやすい。", ex:{t:"かたみに文かはす。",tr:"互いに手紙を交わす。"}},
+ {w:"かたらふ", pos:"動（四段）", mean:"親しく語り合う・言い寄る・仲間に引き入れる", expl:"単なる会話でなく、深く語り合う、または恋愛的に言い寄る意味を持つ。", mne:"『語る』の継続形『語らふ』＝繰り返し語り合う仲＝親密な関係、と覚える。", ex:{t:"男をかたらふ女なり。",tr:"男に言い寄る女である。"}},
+]},
+{id:7, words:[
+ {w:"かづく", pos:"動", mean:"【四段】（水を）かぶる・（褒美を）いただく／【下二段】褒美を頭からかぶせる・与える", expl:"四段では『かぶる』、下二段では『褒美を与える』の意味になる。", mne:"『被（かづ）く』＝頭に被せる→自分が被れば『かぶる』、人に被せれば『与える』。", ex:{t:"褒美をかづく。",tr:"褒美を頂戴する。"}},
+ {w:"かどかどし", pos:"形", mean:"才気がある・角が立つほど鋭い", expl:"知的で鋭さのある様子を表し、良い意味での才気煥発を指すことが多い。", mne:"『角（かど）』が立つほど鋭い才気、と漢字イメージで覚える。", ex:{t:"かどかどしき人にぞありける。",tr:"才気のある人であった。"}},
+ {w:"かなし", pos:"形", mean:"いとしい・かわいい／悲しい", expl:"『愛し』と『悲し』の両方の漢字が当てられ、強い愛情と強い悲哀の両方を表す。", mne:"愛おしさが極まると悲しさにも通じる、と両義を一つの感情としてまとめて覚える。", ex:{t:"子をかなしと思ふ。",tr:"子をいとしいと思う。"}},
+ {w:"かなしうす", pos:"動", mean:"かわいがる", expl:"『かなし（いとしい）』が動詞化した語で、愛情を注ぐ行為を表す。", mne:"『かなし』の動詞形と考え、『いとしく思って可愛がる』と覚える。", ex:{t:"わが子をかなしうす。",tr:"我が子をかわいがる。"}},
+ {w:"かる", pos:"動（下二段）", mean:"離れる・疎遠になる・涸れる", expl:"人間関係が疎遠になることと、水などが涸れることの両方を表す。", mne:"『離（か）る』＝離れる、『涸（か）る』＝涸れる、と同音でセットに覚える。", ex:{t:"人目かれぬる住まひなり。",tr:"人目が疎遠になった住まいである。"}},
+ {w:"かへり（かへし）", pos:"名", mean:"返歌・返事", expl:"和歌のやり取りで、相手の歌に対して返す歌や返答を指す。", mne:"『返す』の名詞形と考えて『返歌・返事』と直感的に覚える。", ex:{t:"歌のかへしをよむ。",tr:"歌の返歌を詠む。"}},
+ {w:"からし", pos:"形", mean:"つらい・厳しい・（味が）からい", expl:"精神的なつらさや、対応の厳しさを表す形容詞。", mne:"現代語『辛い（からい／つらい）』の両方の読みが残る語と意識する。", ex:{t:"世の中からしと思ひなす。",tr:"世の中がつらいと思うようになる。"}},
+ {w:"きこゆ", pos:"動（下二段）", mean:"申し上げる（謙譲）／聞こえる・評判になる", expl:"謙譲の補助動詞として非常によく使われ、また『評判になる』の意味でも使われる。", mne:"『聞こゆ』＝相手に聞こえるように申し上げる、と謙譲の由来を覚える。", ex:{t:"かく申し聞こゆ。",tr:"このように申し上げる。"}},
+ {w:"きは", pos:"名", mean:"（物の）端・へり／境目・仕切り／わき・そば／分（ぶん）／身分・家柄・身の程・分際／限り・限界／程度／時・場合・折", expl:"『際』と書き、物の端や境目が本来の意味。そこから身分・家柄、程度、時・場合などの意にも広がる多義語。", mne:"まず『端・境目』。そこから『身分・程度・時』へ広がる、と順に唱える。", ex:{t:"いとやむごとなききはにはあらぬが、すぐれて時めき給ふありけり。",tr:"それほど高貴な身分ではない方で、際だって帝のご寵愛を受けて栄えていらっしゃる方があった。",s:"源氏物語　桐壺"}},
+ {w:"きよらなり", pos:"形動", mean:"気品があって美しい（最上級の美）", expl:"『きよげなり』よりもさらに上位の、輝くばかりの気品ある美しさを表す。", mne:"『清ら』は美の最上位ランクと覚え、『きよげなり』との格差を意識する。", ex:{t:"きよらなる御姿にてものしたまふ。",tr:"この上なく気品高く美しいお姿でいらっしゃる。"}},
+ {w:"ぐす", pos:"動（サ変）", mean:"伴う・引き連れる・一緒にいる", expl:"『具す』の字を当て、誰かを伴って行動する様子を表す。", mne:"『具（ぐ）す』＝道具のように一緒に備え持つ→『伴う』と覚える。", ex:{t:"供人をぐして行く。",tr:"供の者を引き連れて行く。"}},
+ {w:"くらうど", pos:"名", mean:"蔵人（天皇に近侍し文書や儀式を扱う役人）", expl:"天皇の側近として文書・儀式・雑務を扱う、宮中でも重んじられた官職を指す。", mne:"『蔵（くら）』の『人（うど）』＝宮中の文書を扱う役人、と漢字で覚える。", ex:{t:"くらうどにてさぶらふ。",tr:"蔵人としてお仕えする。"}},
+ {w:"けし", pos:"形（シク活用）", mean:"あってはならない・異様だ・好ましくない／不審だ・変だ", expl:"悪い方に際立っているようすを表す。中古以降は『けしからず』『けしうはあらず』の形で、『まあまあだ・悪くはない』の意味で用いられることがほとんど。", mne:"『けしからず』の元になる語。まず『異様だ・不審だ』、うち消しの形なら『悪くはない』と訳す。", ex:{t:"けしうはあらず。",tr:"悪くはない。"}},
+ {w:"けしからず", pos:"連語", mean:"異様だ・普通でない・よくない", expl:"『け（気）し＋からず』で、現代語『けしからん』のニュアンスに近い非難を表す。", mne:"現代語『けしからん』とほぼ同じ使い方なので直感で覚えやすい。", ex:{t:"けしからぬふるまひなり。",tr:"よくないふるまいである。"}},
+ {w:"けしき", pos:"名", mean:"（自然の）ようす・模様／（人の）ようす・そぶり・表情・態度／きざし・兆候／機嫌・心の動き／意向・考え／特別な事情・わけ", expl:"現代語『景色』ではなく、視覚でとらえた自然や人のようす、また心の動きを表す。目に見えない雰囲気を表す『けはひ』との違いに注意。", mne:"『気色（けしき）』＝『気（心）の色（現れ）』。ようす・機嫌・意向・わけまで広がると押さえる。", ex:{t:"けしきをうかがふ。",tr:"機嫌・様子をうかがう。"}},
+]},
+{id:8, words:[
+ {w:"けしきばかり", pos:"連語", mean:"形ばかり・ほんの少し", expl:"『けしき（様子）』が『ばかり（だけ）』であることから、実質を伴わない形式的な様子を表す。", mne:"『様子だけ』＝中身が伴わない『形ばかり』と覚える。", ex:{t:"けしきばかりの饗応なりけり。",tr:"形ばかりのもてなしであった。"}},
+ {w:"げに", pos:"副", mean:"なるほど・本当に", expl:"人の言うことや評判を実際に確かめて納得する気持ちを表す副詞。", mne:"『実（げ）に』＝『実際に』確かにそうだ、と漢字から覚える。", ex:{t:"げにさもあるべし。",tr:"なるほど確かにそうであろう。"}},
+ {w:"けはひ", pos:"名", mean:"気配・様子", expl:"目には見えないが感じ取れる雰囲気・存在感を表す。", mne:"現代語『気配（けはい）』とほぼ同じ発音・意味で覚えやすい。", ex:{t:"人のけはひす。",tr:"人の気配がする。"}},
+ {w:"こうず", pos:"動（サ変）", mean:"疲れる・困る・弱る", expl:"『困ず』の字を当て、心身が疲れ果てる様子を表す。", mne:"『困（こう）ず』＝『困る』の古い形、と漢字から覚える。", ex:{t:"歩きこうじぬ。",tr:"歩き疲れてしまった。"}},
+ {w:"ここら（ここだ、そこら）", pos:"副", mean:"たくさん・非常に", expl:"数量や程度の多さを表す副詞で、現代語の『あたり』の意味ではない点に注意。", mne:"『ここら』は場所でなく『数量の多さ』を表すと意識して覚える。", ex:{t:"ここら年経ぬる宿なり。",tr:"たいそう長い年月を経た住まいである。"}},
+ {w:"こころぐるし", pos:"形", mean:"気の毒だ・心配だ", expl:"相手の状況を見て心が痛む、思いやりの気持ちを表す。", mne:"『心』が『苦（ぐる）し』＝心が痛む＝気の毒、と漢字構成で覚える。", ex:{t:"病人をこころぐるしく思ふ。",tr:"病人を気の毒に思う。"}},
+ {w:"こころづくし", pos:"名", mean:"あれこれと深く気をもむこと・思い悩むこと", expl:"心を尽くして思い悩む意。現代語の『心尽くし（心配り）』とは意味が異なるので注意。", mne:"『心を尽くす』ほど思い悩む、と語構成から覚える。現代語の『心配り』の意味はない。", ex:{t:"秋はこころづくしの頃なり。",tr:"秋はあれこれと物思いをする頃である。"}},
+ {w:"こころなし", pos:"形", mean:"思いやりがない・情趣を解さない／物の道理がわからない・思慮がない", expl:"人情や風流を理解しない、無風流・無情な様子を表すほか、物の道理がわからない・分別がない意でも用いられる。『うらなし』と読むと全く違う語になる。", mne:"『心が無い』＝思いやりも風流心も無い。さらに『道理がわからない』の意も加えて覚える。", ex:{t:"こころなしと見ゆる者も、よき一言、言ふものなり。",tr:"物の道理がわからないと見える者でも、（ときには）よい一言を言うものだ。"}},
+ {w:"こころにくし", pos:"形", mean:"奥ゆかしい・上品で心ひかれる", expl:"現代語『心憎い（皮肉）』とは異なり、好ましい奥ゆかしさを表すプラス評価語。", mne:"『心』が『憎い』ほど（強く）ひかれる＝奥ゆかしい、と覚える。", ex:{t:"こころにくき振る舞ひなり。",tr:"奥ゆかしい振る舞いである。"}},
+ {w:"こころもとなし", pos:"形", mean:"待ち遠しい・気がかりだ・はっきりしない", expl:"心のよりどころが定まらず、じれったく不安な気持ちを表す。", mne:"『心の元（もと）』が『無し』＝心が落ち着かない＝待ち遠しい、と覚える。", ex:{t:"待つほどこころもとなし。",tr:"待つ間が待ち遠しい。"}},
+ {w:"こちたし", pos:"形", mean:"うるさいほど多い・大げさだ", expl:"物事の量や評判があまりに多く、煩わしく感じられる様子を表す。", mne:"『言（こと）＋甚（いた）し』＝言葉が甚だしい＝うるさいほど多い、と覚える。", ex:{t:"うはさこちたく立ちぬ。",tr:"うわさがうるさいほど多く立った。"}},
+ {w:"こと（事・異・言）", pos:"名", mean:"事柄／別のこと／言葉", expl:"同音で『事・異（こと）・言』の三つの意味を持つため文脈判断が必要な多義語。", mne:"『こと』は『事・異・言』の三役をこなす、と三つまとめて覚える。", ex:{t:"こと人には見せじ。",tr:"別の人には見せまい。"}},
+ {w:"ことごとし", pos:"形", mean:"仰々しい・大げさだ", expl:"必要以上に大がかりで、わざとらしい様子を表す。", mne:"『事々し』＝『事』が重なるほど大げさ、と語感で覚える。", ex:{t:"ことごとしき儀式なり。",tr:"仰々しい儀式である。"}},
+ {w:"ことわり", pos:"名", mean:"道理・理由", expl:"物事の理にかなった筋道を指す語で、『ことわりなり』で『もっともだ』の意にもなる。", mne:"現代語『理（ことわり）』とほぼ同じ意味なので直感的に覚えられる。", ex:{t:"ことわりなりと思ふ。",tr:"もっともなことだと思う。"}},
+ {w:"さうざうし", pos:"形", mean:"物足りない・心寂しい", expl:"あるべきものが欠けているような、満たされない寂しさを表す。", mne:"『索々（さうざう）し』＝何か索然として物足りない、と語感で覚える。", ex:{t:"さうざうしき心地す。",tr:"物足りない気持ちがする。"}},
+]},
+{id:9, words:[
+ {w:"ざえ", pos:"名", mean:"学才・技能（特に漢学の才）", expl:"『才（ざえ）』の字を当て、主に学問・漢籍の才能を指す。", mne:"『才（ざえ）』は『才能』の古い読み方、と漢字そのままで覚える。", ex:{t:"ざえある人にてものしたまふ。",tr:"学才のある人でいらっしゃる。"}},
+ {w:"さかし", pos:"形", mean:"利口だ・賢い（時に生意気だ）", expl:"知的で優れている様子を表すが、時に『でしゃばりだ』という否定的ニュアンスも持つ。", mne:"『賢し』＝賢い、ただし『さかしら』は『利口ぶる』とマイナスにもなると覚える。", ex:{t:"さかしき人にぞありける。",tr:"利口な人であった。"}},
+ {w:"さがなし", pos:"形", mean:"性質が悪い・いたずらだ", expl:"『性（さが）』＋『無し』で、生まれつきの性質が良くない様子を表す。", mne:"『性（さが）』が『無し』＝良い性質が無い＝性悪、と語構成で覚える。", ex:{t:"さがなき者どもの仕業なり。",tr:"性悪ないたずら者たちの仕業である。"}},
+ {w:"さすがなり", pos:"形動", mean:"そうはいってもやはり・そうかといって", expl:"前の事情を認めつつも、それだけでは割り切れない気持ちを表す。", mne:"現代語『さすがに（そうは言っても）』とほぼ同じ感覚で使える。", ex:{t:"さすがに憎からず思ゆ。",tr:"そうはいってもやはり憎くはなく思われる。"}},
+ {w:"さながら", pos:"副", mean:"そのまま・すべて・まるで", expl:"状態がそのまま変わらないこと、また全部・すっかりの意を表し、比喩的に『まるで』の意にもなる。", mne:"現代語『さながら（まるで）』ともつながる語、『そのまま・すっかり』を軸に覚える。", ex:{t:"昔のさながらにてあり。",tr:"昔のままの様子である。"}},
+ {w:"さぶらふ", pos:"動", mean:"お仕えする（謙譲）／あります・おります（丁寧）", expl:"貴人のそばに控える意味から、謙譲語・丁寧語の両方に発達した重要敬語動詞。", mne:"『侍（さぶら）ふ』＝『侍る』＝そばに控える、と漢字から覚える。", ex:{t:"御前にさぶらふ。",tr:"御前にお仕えする。"}},
+ {w:"さまをかふ（かたちをかふ）", pos:"連語", mean:"出家する（姿・形を変える）", expl:"『形（かたち）をかふ』とも言い、俗世の姿から僧侶の姿へ変わることを表す婉曲表現。", mne:"『様（姿）を変える』＝俗世を離れて僧の姿になる＝出家、と婉曲表現として覚える。", ex:{t:"世を捨ててさまをかふ。",tr:"世を捨てて出家する。"}},
+ {w:"さらなり", pos:"形動", mean:"言うまでもない", expl:"『言ふもさらなり』の形で、当然すぎてあえて言う必要もないことを表す。", mne:"『更なり』＝今さら言うまでもない、とそのまま覚える。", ex:{t:"言ふもさらなり。",tr:"言うまでもない。"}},
+ {w:"さらに（～ず）", pos:"副", mean:"まったく～ない", expl:"下に打消を伴って、完全な否定を強調する呼応の副詞。", mne:"『さらに』を見たら文末に『ず』を探す、と呼応表現としてセットで覚える。", ex:{t:"さらに知らず。",tr:"まったく知らない。"}},
+ {w:"さらぬわかれ", pos:"連語", mean:"避けられない別れ（＝死別）", expl:"『避（さ）らぬ別れ』で、人の力では避けられない永遠の別れ、死別を婉曲に表す。", mne:"『避（さ）らぬ』＝避けられない＋『別れ』＝死別、と婉曲表現で覚える。", ex:{t:"さらぬわかれのなくもがな。",tr:"避けられない死別がなければよいのに。"}},
+ {w:"さるは", pos:"接続", mean:"それというのも実は（順接）／そのうえ／そうではあるが・そうはいうものの（逆接）", expl:"ラ変動詞『さり』の連体形に係助詞『は』が付いて一語化したもの。順接・添加・逆接の三つの用法があり、文脈で見分ける。", mne:"①実は②そのうえ③そうはいうものの、の三つ。逆接だけと思い込まないこと。", ex:{t:"さるは、限りなく心を尽くし聞こゆる人に、いとよう似奉れるが、まもらるるなりけり。",tr:"それというのも実は、この上もなく心からお慕い申し上げている方に、実によく似申し上げているので、自然と見つめないではいられなかった。",s:"源氏物語　若紫"}},
+ {w:"しのぶ", pos:"動（四段・上二段）", mean:"我慢する・人目を避けて隠れる／恋しく思う", expl:"『忍ぶ（我慢・隠れる）』と『偲ぶ（懐かしむ）』の両方の意味を持つ多義語。", mne:"『忍ぶ』＝隠れて耐える、『偲ぶ』＝懐かしく思う、と二つの漢字で覚える。", ex:{t:"涙をしのぶ。",tr:"涙をこらえる。"}},
+ {w:"じょことば（修辞法）", pos:"名（修辞法）", mean:"序詞（ある語句を導くための比喩的な前置き表現）", expl:"和歌で、特定の語を引き出すために置かれる比較的長めの修飾表現。", mne:"『序（じょ）』の『言葉』＝本題を導く前置きの言葉、と漢字通りに覚える。", ex:{t:"「あしひきの山鳥の尾のしだり尾の」は「長々し」を導く序詞なり。",tr:"『あしひきの山鳥の尾のしだり尾の』は『長々し』を導く序詞である。"}},
+ {w:"しる（知る・領る・痴る）", pos:"動（四段／下二段）", mean:"【四段・知る】知る・わかる／【四段・領る・治る】治める・領有する／【下二段・痴る】ぼんやりとなる・ぼける・愚かになる", expl:"『知る』（認知）と『領る・治る』（土地や国を治める）は四段。別に下二段の『痴る』があり、ぼんやりとなる・愚かになる意で用いる。", mne:"四段は『知る』と『治める』、下二段は『痴（し）る』＝ぼける、と活用で分けて覚える。", ex:{t:"国をしろしめす。",tr:"国をお治めになる。"}},
+ {w:"すさまじ", pos:"形", mean:"興ざめだ・殺風景だ", expl:"期待や情趣に反して、冷めた気持ちにさせる様子を表す。", mne:"現代語『すさまじい（激しい）』とは違い、まず『興ざめ』を思い出す。", ex:{t:"すさまじきもの、昼ほゆる犬。",tr:"興ざめなもの、それは昼に吠える犬。",s:"枕草子（すさまじきもの）"}},
+]},
+{id:10, words:[
+ {w:"すずろなり", pos:"形動", mean:"なんとなく・むやみに・関係なく", expl:"はっきりした理由もなく物事が起こる、そぞろな様子を表す。", mne:"現代語『そぞろ』の語源で、『なんとなく・むやみに』と覚える。", ex:{t:"すずろに悲しくなりぬ。",tr:"なんとなく悲しくなった。"}},
+ {w:"せ", pos:"名", mean:"川の浅瀬・機会・立場", expl:"川の浅い場所を指す語で、そこから物事の『拠り所・立場』の比喩としても使われる。", mne:"『瀬（せ）』＝川の浅瀬、そこから『身の置き所』の比喩に発展、と覚える。", ex:{t:"身をおくせもなし。",tr:"身を置く場所（拠り所）もない。"}},
+ {w:"せうそこ", pos:"名", mean:"手紙・便り／案内を請うこと・様子", expl:"手紙のやりとりのほか、訪問の際に取り次ぎを頼むことも指す。", mne:"『消息（せうそこ）』＝手紙・便り、と現代語の『消息』ともつながる。", ex:{t:"せうそこして案内を請ふ。",tr:"手紙を送って取り次ぎを頼む。"}},
+ {w:"せちなり", pos:"形動", mean:"ひたむきだ・いちずだ／痛切だ・思いが甚だしい／すばらしい・感きわまる", expl:"『切なり』と書き、心の底から強く思い詰める気持ちを表す。連用形『せちに』の形で副詞的に用いられることが多い。同音に『世知なり』（世渡りが巧みだ）があるので注意。", mne:"『切（せち）』＝切実。『ひたむきだ』を軸に、『痛切だ』『感きわまる』まで押さえる。", ex:{t:"せちに願ふ心なり。",tr:"ひたむきに願う心である。"}},
+ {w:"せめて", pos:"副", mean:"無理に・強いて／たいそう", expl:"現代語『せめて（最低限）』とは異なり、『強引に』の意味が中心。", mne:"現代語とのズレに注意し、『無理やり・強引に』を第一に覚える。", ex:{t:"せめて問ひたまへ。",tr:"無理にでもお尋ねください。"}},
+ {w:"そうす", pos:"動（サ変）", mean:"申し上げる（天皇への謙譲）", expl:"『奏す』の字を当て、天皇に申し上げる特別な謙譲語。", mne:"『奏（そう）す』＝天皇に『奏上』する、と漢字から限定的な敬語と覚える。", ex:{t:"帝に奏す。",tr:"天皇に申し上げる。"}},
+ {w:"そこはかとなし", pos:"形", mean:"なんとなく・はっきりしない", expl:"特にこれといった理由や対象を特定できない、漠然とした様子を表す。", mne:"『そこ（其処）』が『はか（はっきり）』と『無し』＝場所も理由も不明瞭、と覚える。", ex:{t:"そこはかとなく書きつくれば。",tr:"これといった理由もなく書きつけると。",s:"徒然草（序段）"}},
+ {w:"そらごと", pos:"名", mean:"うそ・でたらめ", expl:"『空言』の字を当て、根拠のない作り話を指す。", mne:"『空（そら）言（ごと）』＝中身の空っぽな言葉＝うそ、と漢字から覚える。", ex:{t:"そらごとを言ふ人なり。",tr:"うそを言う人である。"}},
+ {w:"たえて（～ず）", pos:"副", mean:"まったく～ない", expl:"下に打消を伴って完全否定を強調する呼応の副詞。", mne:"『さらに・つゆ』と同じ仲間の全否定副詞、とグループで覚える。", ex:{t:"たえて音沙汰なし。",tr:"まったく音沙汰がない。"}},
+ {w:"たがふ", pos:"動（四段・下二段）", mean:"食い違う・背く／違える", expl:"物事が一致しない、約束などに背く様子を表す。", mne:"『違（たが）ふ』＝『違う』の古語、とそのまま覚える。", ex:{t:"約束にたがふ。",tr:"約束に背く。"}},
+ {w:"たけし", pos:"形", mean:"勇猛だ・激しい・強い", expl:"武勇や勢いの強さ、猛々しさを表す形容詞。", mne:"『猛（たけ）し』＝『猛々しい』の語源、と漢字から覚える。", ex:{t:"たけき武士なり。",tr:"勇猛な武士である。"}},
+ {w:"たてまつる", pos:"動（四段）", mean:"差し上げる・献上する（謙譲）／召し上がる・お召しになる・お乗りになる（尊敬）／〔補助動詞〕…申し上げる（謙譲）", expl:"『与ふ・贈る』の謙譲語が基本。『飲む・食ふ・着る・乗る』の尊敬語でも用いる。補助動詞では動詞の連用形に付いて『…申し上げる』の謙譲の意を表す。", mne:"基本は『差し上げる』（謙譲）。尊敬の『召し上がる』、補助動詞の『…申し上げる』と、三つの用法を分けて覚える。", ex:{t:"壺なる御薬たてまつれ。",tr:"壺にあるお薬を召し上がれ。",s:"竹取物語　かぐや姫の昇天"}},
+ {w:"たのむ", pos:"動（四段・下二段）", mean:"【四段】頼りにする／【下二段】頼りにさせる・あてにさせる", expl:"四段は自分が頼る意味、下二段は相手に自分を頼らせる（期待させる）意味になる点に注意。", mne:"活用の種類で意味が変わる語として『四段＝頼る／下二段＝頼らせる』とセットで覚える。", ex:{t:"後をたのむ。",tr:"後のことを頼みにさせる。"}},
+ {w:"たふ", pos:"動（下二段）", mean:"堪える・こらえる・我慢できる", expl:"苦しみや感情を抑えて耐え忍ぶことを表す。", mne:"現代語『堪える（たえる）』の古い形、とそのまま覚える。", ex:{t:"涙もたへず。",tr:"涙もこらえきれない。"}},
+ {w:"ためし", pos:"名", mean:"先例・前例", expl:"過去に同様のことがあった例を指す語。", mne:"『試し』ではなく『例（ためし）』＝先例、と現代語との違いに注意して覚える。", ex:{t:"ためしなきことなり。",tr:"先例のないことである。"}},
+]},
+{id:11, words:[
+ {w:"たより", pos:"名", mean:"頼り・よりどころ・手紙・機会・便り", expl:"人や物事へのつながり・手段を広く指し、『手紙』『機会』の意味でも使われる多義語。", mne:"現代語『便り（たより）』＝手紙の意味に加え『頼れる手段』も覚える。", ex:{t:"たよりある人なり。",tr:"頼れるつて・縁故のある人である。"}},
+ {w:"ぢもく", pos:"名", mean:"除目（官吏を任命する朝廷の儀式）", expl:"朝廷で行われる、諸国の国司などの官職を任命する年中行事を指す。", mne:"『除目（ぢもく）』＝官職を除（あらた）め定める儀式、と漢字から覚える。", ex:{t:"ぢもくの夜、いみじう騒ぐ。",tr:"除目の行われる夜は、たいそう（人々が）騒ぐ。"}},
+ {w:"ついで", pos:"名", mean:"順序・機会・ついでのこと", expl:"物事の起こる順序、またそれに乗じた機会を表す。", mne:"現代語『ついでに』とほぼ同じ、『順序・機会』で覚える。", ex:{t:"ついであらば参らむ。",tr:"機会があれば参りましょう。"}},
+ {w:"つかまつる", pos:"動（四段）", mean:"いたす（謙譲）", expl:"『する』の謙譲語で、自分の動作をへりくだって言う表現。", mne:"『仕（つかまつ）る』＝『お仕えして行う』＝いたす、と漢字から覚える。", ex:{t:"歌をつかまつる。",tr:"歌を詠みいたす。"}},
+ {w:"つかはす", pos:"動（四段）", mean:"お遣わしになる（尊敬）・派遣なさる", expl:"『遣る』の尊敬語で、人や物を差し向ける動作を敬って表す。", mne:"『遣（つか）はす』＝『遣る』の尊敬形、と対応させて覚える。", ex:{t:"使ひをつかはす。",tr:"使者をお遣わしになる。"}},
+ {w:"つきかげ", pos:"名", mean:"月の光・月影", expl:"月そのものではなく、月が放つ光を指す語。", mne:"『月』の『影（光）』＝月光、と漢字構成から覚える。", ex:{t:"つきかげ澄み渡る夜なり。",tr:"月の光が澄みわたる夜である。"}},
+ {w:"つきづきし", pos:"形", mean:"似つかわしい・ふさわしい", expl:"その場や状況にぴったり合っている様子を表す評価語。", mne:"『付き付きし』＝ぴったり付いている＝ふさわしい、と覚える。", ex:{t:"季節につきづきしき装ひなり。",tr:"季節にふさわしい装いである。"}},
+ {w:"つごもり", pos:"名", mean:"月末・晦日", expl:"『月（つき）籠（ごも）り』が転じたもので、月が隠れる月末を指す。", mne:"『月籠り』＝月が隠れる頃＝月末、と語源から覚える。", ex:{t:"三月のつごもりのころ。",tr:"三月の末の頃。"}},
+ {w:"つたなし", pos:"形", mean:"未熟だ・へただ／運が悪い", expl:"技量の拙さのほか、運の悪さを表すこともある語。", mne:"現代語『拙い（つたない）』とほぼ同じ、『下手・未熟』を軸に覚える。", ex:{t:"筆のつたなきを恥づ。",tr:"筆跡の下手さを恥じる。"}},
+ {w:"つつむ", pos:"動（四段）", mean:"遠慮する・気兼ねする／包む", expl:"『慎む』に通じ、人目を気にして控えめに振る舞うことを表す。", mne:"『包（つつ）む』＝感情を包み隠す＝遠慮する、とイメージで覚える。", ex:{t:"人目をつつむ。",tr:"人目を気にして遠慮する。"}},
+ {w:"つとめて", pos:"名", mean:"早朝／（何かがあった）翌朝", expl:"一般に早朝を指すほか、特に雨や夜の事のあった次の朝（後朝）を指すことが多い。", mne:"『冬はつとめて』で『冬は早朝がよい』。恋や雨の文脈では『翌朝』と訳す。", ex:{t:"冬はつとめて。",tr:"冬は早朝（が趣深い）。",s:"枕草子　春はあけぼの"}},
+ {w:"つゆ（～ず）", pos:"副", mean:"まったく～ない・少しも～ない", expl:"下に打消を伴い、『つゆほども～ない』と完全否定を強調する。", mne:"『露（つゆ）ほども』＝ほんの少しも～ない、と現代語表現と重ねて覚える。", ex:{t:"つゆ知らず。",tr:"少しも知らない。"}},
+ {w:"つれづれなり", pos:"形動", mean:"することがなく退屈だ・所在ない", expl:"時間を持て余し、手持ち無沙汰でぼんやりしている様子を表す。", mne:"『徒然（つれづれ）』は『徒然草』の題名でも有名、『退屈』と覚える。", ex:{t:"つれづれなるままに、日暮らし硯に向かひて。",tr:"することもなく退屈なのにまかせて、一日中硯に向かって。",s:"徒然草（序段）"}},
+ {w:"つれなし", pos:"形", mean:"冷淡だ・そ知らぬ顔だ・平然としている", expl:"相手への配慮や反応を見せず、素っ気ない態度を表す。", mne:"『連れ無し』＝心が連れ添わない＝冷淡、と語感で覚える。", ex:{t:"つれなき人の心なり。",tr:"冷淡な人の心である。"}},
+ {w:"て（手）", pos:"名", mean:"筆跡・書風／腕前", expl:"身体の『手』だけでなく、書いた文字の筆跡や、技能の腕前を指すことがある。", mne:"『手』が上手い＝『筆跡が美しい・腕前が良い』と意味の広がりを覚える。", ex:{t:"てを見ればその人と知る。",tr:"筆跡を見ればその人だとわかる。"}},
+]},
+{id:12, words:[
+ {w:"ときめく", pos:"動（四段）", mean:"（寵愛を受けて）栄える・時流に乗って栄える", expl:"現代語の『胸がときめく』とは異なり、権勢を得て華やかに栄える意味が中心。", mne:"『時（とき）に会（あ）う』＝時流に乗って栄える、と覚え現代語との違いに注意。", ex:{t:"時にときめく人なり。",tr:"時流に乗って栄えている人である。"}},
+ {w:"とし", pos:"形", mean:"【利し・鋭し】よく切れる・するどい・鋭利だ／【疾し】時期が早い／速度が速い・速く激しい／【敏し】すばしこい・機敏だ／鋭い・鋭敏だ", expl:"刃物などがよく切れる・鋭利だの意が第一義。時期や速度が早い意は『疾し』、感覚や動作が機敏・鋭敏な意は『敏し』と書く。同音の名詞『年・歳』とは別語。", mne:"まず『利（と）し』＝よく切れる・するどい。すばやいは『疾し』、機敏・鋭敏は『敏し』、と分けて覚える。", ex:{t:"大蔵卿ばかり耳とき人はなし。",tr:"大蔵卿ほど耳の鋭敏な人はいない。",s:"枕草子　大蔵卿ばかり"}},
+ {w:"としごろ", pos:"名", mean:"長年の間・数年来", expl:"現代語『年頃（適齢期）』ではなく、『長い年月の間』という期間を表す。", mne:"現代語との意味ずれに注意し、『長年の間』をまず覚える。", ex:{t:"としごろ思ひわたる。",tr:"長年の間ずっと思い続けている。"}},
+ {w:"とぶらふ", pos:"動（四段）", mean:"訪問する・見舞う／弔う", expl:"人を訪ねる意味と、死者を弔う意味の両方を持つ語。", mne:"『訪（とぶら）ふ』＝訪ねる、生者なら見舞い、死者なら弔い、と使い分けて覚える。", ex:{t:"病をとぶらふ。",tr:"病気を見舞う。"}},
+ {w:"とみに", pos:"副", mean:"急に・にわかに", expl:"物事が突然に起こる様子を表す副詞で、多く打消を伴って『急には～ない』となる。", mne:"『頓（とみ）に』＝『頓死』の『頓』と同源、急なさまと覚える。", ex:{t:"とみに立ち帰る。",tr:"急に引き返す。"}},
+ {w:"なかなかなり", pos:"形動", mean:"中途半端だ・かえって（しない方がよかった）", expl:"生半可な状態がかえってマイナスに働く、というニュアンスを持つ語。", mne:"現代語『なかなか』（かなり）との意味ずれに注意し、『中途半端・かえって』を覚える。", ex:{t:"なかなかなる住まひなり。",tr:"中途半端な住まいである。"}},
+ {w:"ながむ", pos:"動（下二段）", mean:"もの思いにふけりながら眺める・詠嘆する", expl:"単に景色を見るだけでなく、物思いにふけりながらぼんやり眺める様子を表す。", mne:"『眺む』は『詠（なが）む』にも通じ、もの思いを込めた行為と覚える。", ex:{t:"月をながめてもの思ふ。",tr:"月を眺めながら物思いにふける。"}},
+ {w:"な～そ", pos:"連語", mean:"～するな（禁止）", expl:"『な』と『そ』で動詞の連用形（カ変・サ変は未然形）を挟み、禁止を表す呼応表現。", mne:"『な』と『そ』で挟んだら『～するな』と機械的に訳す、と型で覚える。", ex:{t:"な行きそ。",tr:"行くな。"}},
+ {w:"なでふ", pos:"連体詞／副", mean:"どうして・なんという", expl:"驚きや反発を込めて理由を問う語で、反語的に使われることが多い。", mne:"『何（なに）といふ』が縮まった語、と語源から『なんという・どうして』を覚える。", ex:{t:"なでふことかある。",tr:"どうということがあろうか、いや何もない。"}},
+ {w:"なにおふ（名に負ふ）", pos:"連語", mean:"評判が高い・名前にふさわしい", expl:"その名の通りの評判・実質を備えていることを表す。", mne:"『名』を『負う』＝名前にふさわしい実質を持つ、と漢字から覚える。", ex:{t:"名に負ふ山なり。",tr:"評判にふさわしい山である。"}},
+ {w:"なのめなり", pos:"形動", mean:"いいかげんだ・平凡だ・（打消で）並々でない", expl:"『斜めなり』が語源で、通り一遍の平凡さを表す。打消を伴うと『格別だ』と逆の意味になる点に注意。", mne:"『斜め』＝まっすぐでない＝いい加減、ただし『なのめならず』は『格別』と反転すると覚える。", ex:{t:"なのめならぬ喜びなり。",tr:"並々でない喜びである。"}},
+ {w:"なほ", pos:"副", mean:"やはり・依然として／さらに", expl:"以前の状態が変わらず続くこと、また程度が一層増すことを表す。", mne:"現代語『なお』とほぼ同じ、『やはり・さらに』で直感的に覚える。", ex:{t:"なほ思ひまさる。",tr:"やはり思いがまさる。"}},
+ {w:"なまめかし", pos:"形", mean:"優美だ・若々しく上品だ・色っぽい", expl:"みずみずしい若さと気品を兼ね備えた美しさを表す。", mne:"『生（なま）めかし』＝生き生きとした若々しさ、と覚える。", ex:{t:"なまめかしき姿なり。",tr:"若々しく優美な姿である。"}},
+ {w:"なむ", pos:"係助詞／終助詞／連語", mean:"【係助詞】強意・強調（文末は連体形で結ぶ）／【終助詞】…てほしい・…てもらいたい（未然形に付く）／【連語】きっと…だろう・…しよう（連用形に付く）", expl:"文中で連体形に結べば係助詞の強意。未然形に付いて文末にあれば他への願望の終助詞。連用形に付く場合は完了『ぬ』の未然形『な』＋推量・意志の『む』で、強い推量・意志・可能推量・適当を表す。", mne:"接続で見分ける。連体形に結ぶ＝係助詞、未然形＋文末＝～してほしい、連用形＝きっと～だろう。", ex:{t:"いつしか梅咲かなむ。",tr:"早く梅が咲いてほしい。",s:"更級日記　梅の立枝"}},
+ {w:"なやむ", pos:"動（四段）", mean:"病気で苦しむ・患う", expl:"現代語の『悩む（思い悩む）』よりも、病に苦しむ意味が古文では中心。", mne:"まず『病気で苦しむ』を第一義として覚える。", ex:{t:"風邪になやむ。",tr:"風邪で苦しむ。"}},
+]},
+{id:13, words:[
+ {w:"ならふ", pos:"動（四段）", mean:"慣れる・習慣となる／習う・学ぶ", expl:"繰り返すことで身につく意から、『習慣になる』『習う・学ぶ』の意味を表す。", mne:"『習（なら）ふ』＝繰り返して慣れる、と現代語『習う』ともつなげて覚える。", ex:{t:"都のならひにしたがふ。",tr:"都の習慣にならう。"}},
+ {w:"にほふ", pos:"動（四段）", mean:"美しく色づく・つやめく／香る", expl:"視覚的な美しい輝き・色つやを表すのが本来の意味で、嗅覚の意味は後の発展。", mne:"『匂（にほ）ふ』はまず『美しく映える』色彩のイメージで覚える。", ex:{t:"花のにほふ色なり。",tr:"花の色美しく映える様子である。"}},
+ {w:"にようばう", pos:"名", mean:"女房（宮中や貴族の家に仕える女官）", expl:"現代語『女房（妻）』とは異なり、宮仕えする女性使用人を指す。", mne:"『女房』は『奥さん』ではなく『宮廷に仕える女性』と覚え直す。", ex:{t:"にようばうたちさぶらふ。",tr:"女房たちがお仕えする。"}},
+ {w:"ねんず", pos:"動（サ変）", mean:"祈る・念じる／我慢する", expl:"『念ず』の字を当て、心の中で強く願う、または堪え忍ぶ様子を表す。", mne:"『念（ねん）ず』＝念じる＝祈る、我慢もその延長と覚える。", ex:{t:"心にねんず。",tr:"心の中で祈念する。"}},
+ {w:"～のがり（がり）", pos:"連語", mean:"～のもとへ", expl:"人を表す語に付いて、その人のいる場所への方向を示す。", mne:"『のがり』＝『の（もとへ）＋あり』の意、と訪問先を示す語として覚える。", ex:{t:"姫君のがり参る。",tr:"姫君のもとへ参上する。"}},
+ {w:"のたまふ", pos:"動（四段）", mean:"おっしゃる（尊敬）", expl:"『言ふ』の尊敬語で、貴人の発言を敬って表す代表的な敬語動詞。", mne:"『言ふ』の尊敬語として『言ふ→のたまふ』と対応させて覚える。", ex:{t:"かくのたまふ。",tr:"このようにおっしゃる。"}},
+ {w:"ののしる", pos:"動（四段）", mean:"大声で騒ぐ・評判になる", expl:"現代語『罵る（悪口を言う）』とは異なり、単に大声で騒ぎ立てる、または世間で評判になる意味を表す。", mne:"現代語との意味ずれに注意し、まず『大騒ぎする』を覚える。", ex:{t:"世にののしる評判なり。",tr:"世間で大騒ぎになる評判である。"}},
+ {w:"はかなし", pos:"形", mean:"頼りない・むなしい・ちょっとした", expl:"『はか（目安・成果）』が『無し』で、頼りにならず、あっけなく消えてしまう様子を表す。", mne:"『はか（成果）が無し』＝手ごたえがない＝頼りない・むなしい、と覚える。", ex:{t:"はかなき世の中なり。",tr:"頼りなくむなしい世の中である。"}},
+ {w:"はかばかし", pos:"形", mean:"てきぱきしている・はっきりしている・頼りになる", expl:"物事が順調にはかどる様子、または頼りがいのある様子を表す。", mne:"『捗（はかど）る』と同源、『てきぱき進む』とつなげて覚える。", ex:{t:"はかばかしき後見なし。",tr:"頼りになる後見人がいない。"}},
+ {w:"はしたなし", pos:"形", mean:"きまりが悪い・中途半端だ・そっけない", expl:"どっちつかずで落ち着かない、居心地の悪い気まずさを表す。", mne:"『端（はした）』＝中途半端な端数、と考え『きまりが悪い』を導く。", ex:{t:"はしたなき心地す。",tr:"きまりの悪い気持ちがする。"}},
+ {w:"はづかし", pos:"形", mean:"（こちらが気後れするほど）立派だ／恥ずかしい", expl:"相手が優れすぎていて、こちらが気後れするような立派さを表す用法が重要。", mne:"『相手が立派すぎて自分が恥ずかしくなる』という発想の転換で覚える。", ex:{t:"はづかしき人の御前なり。",tr:"こちらが気後れするほど立派な方の御前である。"}},
+ {w:"はやく", pos:"副", mean:"すでに・とっくに／以前に・昔・かつて／〔下に「けり」を伴って〕驚いたことには・なんとまあ・実は／もともと・元来", expl:"形容詞『早し』の連用形『早く』とは別語。過去の事実を指す用法と、後から気づいた驚きを表す用法（『けり』と呼応）とを区別する。", mne:"下に『けり』があれば『なんとまあ～だったのだ』。なければ『すでに・以前に・もともと』のどれかで訳す。", ex:{t:"針を引き抜きつれば、はやく尻を結ばざりけり。",tr:"針を引き抜いたところ、なんとまあ（糸の）端を結んでいなかったのだった。"}},
+ {w:"はべり", pos:"動（ラ変）", mean:"お仕えする（謙譲）／あります・ございます（丁寧）", expl:"『あり・をり』の丁寧語・謙譲語として非常に多用される最重要敬語動詞。", mne:"『侍（はべ）り』＝おそばに控える→丁寧に『あります』、と『さぶらふ』と同じ仲間で覚える。", ex:{t:"かくなむはべる。",tr:"このようでございます。"}},
+ {w:"ひがごと", pos:"名", mean:"間違ったこと・道理に外れたこと", expl:"『僻（ひが）事』の字を当て、正しくない、ひねくれたことを指す。", mne:"『僻（ひが）む』の『僻』＝ひねくれ＝間違い、と漢字から覚える。", ex:{t:"ひがごとを言ふ。",tr:"見当違いなことを言う。"}},
+ {w:"ひごろ", pos:"名", mean:"ふだん・数日来・日ごろ", expl:"平常の様子、また特定の期間の日々の連続を指す。", mne:"現代語『日ごろ』とほぼ同じなので直感的に覚えられる。", ex:{t:"ひごろの心づかひなり。",tr:"ふだんの心づかいである。"}},
+]},
+{id:14, words:[
+ {w:"びんなし", pos:"形", mean:"不都合だ・都合が悪い・気の毒だ", expl:"『便（びん）無し』で、都合が悪く具合の良くない様子を表す。", mne:"『便（びん）』が『無し』＝都合が無い＝不都合、と漢字構成で覚える。", ex:{t:"びんなきことなり。",tr:"不都合なことである。"}},
+ {w:"ふ（経）", pos:"動（下二段）", mean:"（時が）経過する", expl:"時間が過ぎ去っていくことを表す動詞。", mne:"『経（ふ）』＝『経過』の『経』、と漢字一字から時間の経過を覚える。", ex:{t:"年を経て思ひ出づ。",tr:"年月が経って思い出す。"}},
+ {w:"ふびんなり", pos:"形動", mean:"気の毒だ・かわいそうだ", expl:"『不憫（ふびん）』の字を当て、相手への同情の気持ちを表す。", mne:"現代語『不憫（ふびん）』とほぼ同じ意味で直感的に覚えられる。", ex:{t:"ふびんなる身の上なり。",tr:"気の毒な身の上である。"}},
+ {w:"ふみ", pos:"名", mean:"手紙／書物・漢籍", expl:"『文（ふみ）』の字が示す通り、手紙のほか学問的な書物・漢文の書を指す。", mne:"『文（ふみ）』＝文字で書かれたもの全般＝手紙・書物、と覚える。", ex:{t:"ふみを取り交はす。",tr:"手紙をやりとりする。"}},
+ {w:"ふる（旧る・触る・震る）", pos:"動", mean:"年を取る・老いる・年月がたつ・古びる（旧る）／（軽く）さわる・ふれる・（ほんの少し）かかわり合う・関係する（触る）／（大地が）揺れ動く・震動する（震る）／〔同音の別語〕雨・雪が降る（降る）／揺り動かす・振り動かす（振る）", expl:"同音で複数の意味を持つ語で、文脈により判断する。『触る』は単に触れるだけでなく、『関係する・かかわり合う』の意でも用いられる。『降る』『振る』は表記も意味も異なる同音語。", mne:"『古（ふ）る』＝時が経って古くなる、を基本義に。『触る』は『関係する』、『降る・振る』も同音の別語として押さえる。", ex:{t:"けしきばかりふれさせ給ひて。",tr:"（お食事に）形だけ箸をおつけになられて。",s:"源氏物語　桐壺"}},
+ {w:"ほい", pos:"名", mean:"本来の意志・本望・かねての願い", expl:"『本意（ほい）』の字を当て、もともと抱いていた願いや意図を指す。", mne:"『本意（ほんい）』の音が変化した語、と漢字から意味をつかむ。", ex:{t:"ほい遂げつ。",tr:"本来の願いを遂げた。"}},
+ {w:"ほど", pos:"名", mean:"時間・距離・年齢・程度・身分", expl:"様々な『程合い』を広く指す多義語で、文脈に応じて訳し分けが必要。", mne:"『程（ほど）』は『どれくらいか』を表す万能語、と広く捉えて覚える。", ex:{t:"ほどよき人なり。",tr:"程度のよい（身分相応の）人である。"}},
+ {w:"まいて", pos:"副", mean:"まして・なおさら", expl:"前の事柄と比較して、さらに程度が強まることを表す副詞。", mne:"『まして』の古い形とそのまま対応させて覚える。", ex:{t:"まいて悲しさまさる。",tr:"まして悲しさがつのる。"}},
+ {w:"まうく", pos:"動（下二段）", mean:"準備する・用意する／作り構える・こしらえる／（妻や子を）持つ／得をする・手に入れる／（病気に）かかる", expl:"『設く・儲く』と書き、あらかじめ用意するのが基本。『妻をまうく』（妻を持つ）、『病をまうく』（病気にかかる）のような用法もある。", mne:"『設（まう）く』＝前もって用意する。目的語によって『妻を持つ』『病気にかかる』と訳が変わることも押さえる。", ex:{t:"舟どもをまうけて、待ちけり。",tr:"舟々を用意して、待っていた。"}},
+ {w:"まうづ", pos:"動（下二段）", mean:"参上する・参詣する（謙譲）", expl:"目上の人のもとや神社仏閣へ出向くことをへりくだって表す謙譲語。", mne:"『詣（まう）づ』＝『初詣』の『詣』、と漢字から『参詣する』を覚える。", ex:{t:"初瀬にまうづ。",tr:"初瀬に参詣する。"}},
+ {w:"まかる", pos:"動（四段）", mean:"退出する（謙譲）", expl:"貴人の御前から下がる、また地方などへ出て行くことをへりくだって表す。", mne:"『罷（まか）る』＝『罷免』の『罷』、貴人の前から『退く』と覚える。", ex:{t:"御前よりまかる。",tr:"御前から退出する。"}},
+ {w:"まくらことば（修辞法）", pos:"名（修辞法）", mean:"枕詞（特定の語の前に置かれる五音の修飾語）", expl:"特定の語を導くために置かれる、意味よりも音や語調を整える修辞技法。", mne:"『あしひきの→山』のように決まった語を導く『枕』の言葉、と覚える。", ex:{t:"「たらちねの」は母の枕詞なり。",tr:"『たらちねの』は『母』を導く枕詞である。"}},
+ {w:"まさなし", pos:"形", mean:"よくない・道理に合わない・見苦しい", expl:"正しくない、あるいは体裁が悪いことを表す評価語。", mne:"『正（まさ）無し』＝正しくない、と漢字から否定的評価を覚える。", ex:{t:"まさなきふるまひなり。",tr:"よくないふるまいである。"}},
+ {w:"まな", pos:"感動詞", mean:"だめだ・するな（禁止・制止）", expl:"相手の動作をとがめて止めさせる語。漢文訓読の古い形では『…することまな』のように用いられて副詞だが、和文では感動詞として用いる。", mne:"『な～そ』（～するな）とは別の語。こちらは『だめ！』と叫ぶ一語の制止表現と覚える。", ex:{t:"女房の放つを、「まな」と仰せらるれば。",tr:"（御格子を）女房が開けるのを、「だめ」と（中宮様が）仰せになるので。",s:"枕草子　宮にはじめてまゐりたるころ"}},
+ {w:"まほなり", pos:"形動", mean:"完全だ・きちんとしている", expl:"欠けたところがなく整っている様子を表す。", mne:"『真秀（まほ）なり』＝『真（まこと）に秀でている』＝完全、と覚える。", ex:{t:"まほなる心にてあり。",tr:"完全で整った心である。"}},
+]},
+{id:15, words:[
+ {w:"まめまめし（まめやかなり）", pos:"形", mean:"まじめだ・誠実だ・実用的だ", expl:"『まめ』を重ねて強めた語で、浮ついたところのない実直さや実用性を表す。", mne:"現代語『まめに働く』の『まめ』を強めた形、と覚える。", ex:{t:"まめまめしく仕ふ。",tr:"まじめに実直に仕える。"}},
+ {w:"まもる", pos:"動（四段）", mean:"目を放さず見続ける・見つめる・見守る／見張る・警戒する・気をつける・守る", expl:"現代語『守る（保護する）』よりも、視線を離さずじっと見つめる意味が中心だが、見張る・警戒する・守るの意も並んで用いられる。", mne:"『目守（まも）る』＝目を離さず見つめるが第一義。『見張る・守る』もセットで覚える。", ex:{t:"花の本には、ねぢ寄り立ち寄り、あからめもせずまもりて。",tr:"（桜の）花の下に、にじり寄って近寄り、わき見もしないで見つめて。",s:"徒然草　一三七"}},
+ {w:"まらうど", pos:"名", mean:"客人", expl:"よそから訪れてきた客を指す語。", mne:"『客人（まろうど）』の古い読み、と現代語の名残から覚える。", ex:{t:"まらうどをもてなす。",tr:"客人をもてなす。"}},
+ {w:"まゐる", pos:"動（四段）", mean:"参上する（謙譲）／召し上がる・お乗りになる（尊敬）", expl:"貴人のもとへ行く謙譲語のほか、『食ふ・飲む・着る』などの尊敬語としても使われる。", mne:"『参（まゐ）る』は基本は謙譲だが、『召し上がる』の尊敬用法もあると覚える。", ex:{t:"内裏にまゐる。",tr:"宮中に参上する。"}},
+ {w:"みそかなり", pos:"形動", mean:"こっそりと・ひそかだ", expl:"人目を避けてひそかに物事を行う様子を表す。", mne:"『密（みそ）かなり』＝『密か』とほぼ同じ漢字・意味で覚えやすい。", ex:{t:"みそかに出でたまふ。",tr:"こっそりとお出かけになる。"}},
+ {w:"みゆ", pos:"動（下二段）", mean:"見える・目に入る／見られる／見せる・思わせる／姿を見せる・現れる・来る／会う・対面する／思われる・考えられる／（女が男に）姿を見せる・結婚する", expl:"『見る』の自発・受身形。自然に目に入る意のほか、判断・印象を表す『～と思われる』、女性のもとに男性が通う『結婚する』の意でも用いる。", mne:"『見ゆ』は①見える②思われる③結婚する、の三つをセットで唱える。", ex:{t:"いかならむ人にもみえて、身をも助け、幼き者どもをもはぐくみ給ふべし。",tr:"どのような男であっても結婚して、あなた自身の身を守り、幼い子供たちをも大切にお育てになるがよい。"}},
+ {w:"むくつけし", pos:"形", mean:"気味が悪い・恐ろしい", expl:"不気味で恐怖を感じさせる様子を表す形容詞。", mne:"語感そのままに『不気味・気味悪い』と丸ごと覚える。", ex:{t:"むくつけき音のす。",tr:"気味の悪い音がする。"}},
+ {w:"むげなり", pos:"形動", mean:"ひどい・論外だ・むやみだ", expl:"『無下（むげ）なり』の字を当て、程度がはなはだしく良くない様子を表す。", mne:"現代語『無下に扱う』の『無下』と同語源、『ひどい』と覚える。", ex:{t:"むげなるしうちなり。",tr:"ひどい仕打ちである。"}},
+ {w:"むつかし", pos:"形", mean:"うっとうしい・気味が悪い・わずらわしい", expl:"現代語『難しい（困難）』とは異なり、不快でうっとうしい感情を表す。", mne:"現代語との意味ずれに注意し、『うっとうしい・不快』を第一に覚える。", ex:{t:"むつかしき天気なり。",tr:"うっとうしい天気である。"}},
+ {w:"むなしくなる", pos:"連語", mean:"亡くなる（死ぬことの婉曲表現）", expl:"『空しくなる』で、命の火が消えこの世からいなくなることを婉曲に表す。", mne:"『空（むな）しくなる』＝存在が空になる＝死、と婉曲表現として覚える。", ex:{t:"つひにむなしくなりたまひぬ。",tr:"とうとうお亡くなりになった。"}},
+ {w:"めざまし", pos:"形", mean:"心外だ（意外で不快）／すばらしい（意外なほど）", expl:"『目覚まし』の字が示す通り、はっと目が覚めるほど意外な様子を、良悪どちらにも使う。", mne:"『目が覚めるほど意外』が基本で、文脈次第で『心外』にも『すばらしい』にもなると覚える。", ex:{t:"めざましき仕打ちなり。",tr:"心外な仕打ちである。"}},
+ {w:"めづらし", pos:"形（シク活用）", mean:"愛すべきだ・賞美すべきだ・すばらしい／見慣れない・今までに例がない（めったにない）／新鮮だ・清新だ・目新しい", expl:"現代語『珍しい（希少）』よりも、新鮮で心惹かれる魅力を表すことが多い。『見慣れない・今までに例がない』の意も持つ。", mne:"『愛（め）づ』（愛でる）＋『らし』＝愛でたくなる＝すばらしい。まず『見慣れない』も押さえる。", ex:{t:"めづらしき花にぞありける。",tr:"見慣れない（すばらしい）花であった。"}},
+ {w:"めでたし", pos:"形", mean:"すばらしい・立派だ", expl:"現代語『めでたい（祝い事）』よりも広く、称賛すべき見事さ全般を表す。", mne:"『愛（め）づ』＋『甚（いた）し』＝愛でる気持ちが甚だしい＝すばらしい、と覚える。", ex:{t:"めでたき御様子なり。",tr:"すばらしいご様子である。"}},
+ {w:"めのと", pos:"名", mean:"乳母", expl:"実母に代わって子に乳を与え養育する女性を指す。", mne:"『め（女）の（の）と（人）』＝乳をやる女性＝乳母、と覚える。", ex:{t:"めのとの君にてものしたまふ。",tr:"乳母である方でいらっしゃる。"}},
+ {w:"めやすし", pos:"形", mean:"感じがよい・見た目に感じがよい", expl:"『目安し』の字を当て、見た目に不快感がなく好ましい様子を表す。", mne:"『目』に『安（やす）し』＝見て安心できる＝感じがよい、と漢字で覚える。", ex:{t:"めやすき人柄なり。",tr:"感じのよい人柄である。"}},
+]},
+{id:16, words:[
+ {w:"～もがな（てしが・にしが）", pos:"終助", mean:"～があればなあ（願望）", expl:"体言や連用形などに付いて、実現を願う気持ちを表す終助詞。", mne:"『てしが・にしが』も同じ願望のグループとしてまとめて覚える。", ex:{t:"花もがな。",tr:"花があればなあ。"}},
+ {w:"もとより", pos:"副", mean:"はじめから・もちろん・元来", expl:"物事の最初から、あるいは当然のこととして、という意味を表す。", mne:"『本（もと）より』＝根本から、と漢字イメージで『はじめから』を覚える。", ex:{t:"もとより知りたり。",tr:"はじめから知っていた。"}},
+ {w:"ものす", pos:"動（サ変）", mean:"いる・行く・来る・する（さまざまな動詞の代用）／〔尊敬の「給ふ」を伴って〕…でいらっしゃる・…なさる", expl:"具体的な動詞を婉曲に言い換える代動詞。文脈によって『いる・行く・来る・する』などさまざまに訳し分ける。尊敬の『給ふ』を伴うと『…でいらっしゃる』の意になる。", mne:"『もの＋す』＝『何かをする』の万能代動詞。『ものしたまふ』は『…でいらっしゃる』と訳す。", ex:{t:"かくものしたまふ。",tr:"このようにしていらっしゃる。"}},
+ {w:"やうやう", pos:"副", mean:"だんだん・しだいに", expl:"物事が徐々に変化していく様子を表す副詞。", mne:"現代語『ようやく』の語源だが意味は『だんだん』と覚える。", ex:{t:"やうやう白くなりゆく山際。",tr:"だんだん白くなっていく山際。",s:"枕草子（第一段・冒頭）"}},
+ {w:"やがて", pos:"副", mean:"すぐに・そのまま", expl:"現代語『やがて（しばらくして）』とは異なり、時間差なく即座に、の意味が中心。", mne:"現代語との時間感覚のズレに注意し、『すぐに・間を置かず』を覚える。", ex:{t:"やがて帰りぬ。",tr:"すぐに帰った。"}},
+ {w:"やさし", pos:"形（シク活用）", mean:"身も細るほどだ・つらい・肩身が狭い／気恥ずかしい・きまりが悪い／遠慮がちだ・慎み深い・礼節がすぎる／しとやかだ・上品だ・優美だ／けなげだ・殊勝だ", expl:"『痩さし』（身が痩せるほどつらい）が原義で、そこから『優美だ』の意味にも発展した。現代語『やさ（易）しい』もこの語から生じた同語源の語。", mne:"現代語『優しい』とは違い、まず『つらい・気恥ずかしい』。次に『優美だ・けなげだ』と覚える。", ex:{t:"身もやさしく思ゆ。",tr:"身も細るほどつらく思われる。"}},
+ {w:"やつす", pos:"動（四段）", mean:"目立たなくする・みすぼらしく姿を変える", expl:"身なりを地味にしたり、姿を変えて正体を隠すことを表す。", mne:"『やつれる』の他動詞形と考え、『わざと目立たなくする』と覚える。", ex:{t:"身をやつして出づ。",tr:"身をやつして（目立たぬ姿で）出かける。"}},
+ {w:"やまと", pos:"名", mean:"大和（日本の国、また奈良地方）", expl:"日本という国そのもの、または奈良地方を指す地名で、『やまとことば』などの複合語でも頻出する。", mne:"『大和（やまと）』＝日本の古い呼び名、と漢字からそのまま覚える。", ex:{t:"やまとことばにて書く。",tr:"和語（日本の言葉）で書く。"}},
+ {w:"やむごとなし", pos:"形", mean:"高貴だ・格別だ・捨て置けない", expl:"『止む事無し』が語源で、放っておけないほど重要・高貴な様子を表す。", mne:"『止（や）む事（こと）無し』＝そのままにできない＝格別、と語構成で覚える。", ex:{t:"やむごとなき人にぞありける。",tr:"高貴な人であった。"}},
+ {w:"やる", pos:"動（四段）", mean:"行かせる・出発させる・派遣する／（手紙や物を）送る・届ける・贈る／（心を）晴らす・なぐさめる／（代金を）払う・与える／〔補助動詞〕遠く…する・はるかに…する／〔補助動詞〕すっかり…する・最後まで…しきる", expl:"『遣る』が基本で、人を行かせる意から、物を送る・与える意に広がる。補助動詞では動作が遠くまで及ぶこと、打消を伴って『最後まで…しきる』ことを表す。『おこす（遣す）』が対義語。", mne:"基本は『人を行かせる』。補助動詞は『遠く～する』と『最後まで～しきる』の二用法。", ex:{t:"言ひもやらず、むせかへり給ふほどに。",tr:"（母君は悲しみのために）最後まで言うこともできず、むせび泣きなさっているうちに。",s:"源氏物語　桐壺"}},
+ {w:"やをら", pos:"副", mean:"そっと・静かに", expl:"音を立てずに静かに動作を行う様子を表す。", mne:"『やをら』＝そっと動く、と語感そのままで覚える。", ex:{t:"やをら立ち上がる。",tr:"そっと立ち上がる。"}},
+ {w:"ゆかし", pos:"形", mean:"見たい・知りたい・聞きたい（心ひかれる）", expl:"対象に強く心惹かれ、もっと知りたい・近づきたいと思う気持ちを表す。", mne:"『行かし』＝心がそちらへ行きたくなる、と語源イメージで覚える。", ex:{t:"ゆかしき人柄なり。",tr:"心ひかれる（知りたくなる）人柄である。"}},
+ {w:"ゆくりなし", pos:"形", mean:"突然だ・思いがけない・軽率だ", expl:"予期せぬ突発的な出来事や、深く考えない軽率さを表す。", mne:"『ゆくり』＝前触れなく、と語感から『突然・不意に』を覚える。", ex:{t:"ゆくりなく参りぬ。",tr:"不意に参上した。"}},
+ {w:"ゆふされば", pos:"連語", mean:"夕方になると", expl:"『夕さり来（く）れば』が縮約した表現で、夕暮れが訪れる意を表す。", mne:"『夕（ゆふ）さる』＝夕方になる、が『されば』の形になったと覚える。", ex:{t:"ゆふされば風冷たし。",tr:"夕方になると風が冷たい。"}},
+ {w:"ゆゆし", pos:"形", mean:"恐れ多い・不吉だ／（程度が）はなはだしい・すばらしい", expl:"神聖・不吉のどちらの意味でも『触れてはならないほど』の強い程度を表す評価語。", mne:"『忌（い）む』に通じ、『触れてはならないほど』の強さ、善悪どちらにも使うと覚える。", ex:{t:"ゆゆしき事なり。",tr:"（恐れ多いほど／はなはだしく）大変なことである。"}},
+]},
+{id:17, words:[
+ {w:"ゆゑ", pos:"名", mean:"原因・理由・わけ／素性・由緒・由来／風情・趣／縁故・ゆかり／さしさわり・支障／〔体言＋ゆゑに〕…によって・…のために（順接）／…なのに（逆接）", expl:"本質的な原因・理由を表す。物事のよりどころとしての理由を表す『よし（由）』とは使い分ける。体言や連体形に付いて原因・理由を表す用法では、順接・逆接の両方がある。", mne:"①理由②由緒③風情④ゆかり、と四つ。『～ゆゑに』は原因（順接）と逆接の両方に使える。", ex:{t:"深きゆゑあらん。",tr:"なみたいていではないわけがあるのだろう。",s:"徒然草　二三六"}},
+ {w:"ようせずは", pos:"連語", mean:"悪くすると・下手をすると", expl:"事がうまくいかなかった場合を想定して述べる表現。", mne:"『よう（よく）せずは』＝うまくいかなければ、と直訳から覚える。", ex:{t:"ようせずは命も危ふし。",tr:"下手をすると命も危ない。"}},
+ {w:"よし（由・良し・縦し）", pos:"名／形／副", mean:"理由・いわれ（由）／良い（良し）／たとえ～としても（縦し）", expl:"同音で三つの異なる語を持つため、文脈でどの『よし』かを見極める必要がある。", mne:"『由・良し・縦し』の三役を持つ語、とまとめて三つ並べて覚える。", ex:{t:"かかるよしを申す。",tr:"このような事情を申し上げる。"}},
+ {w:"よのなか", pos:"名", mean:"世間・治世／男女の仲", expl:"社会全体を指すほか、恋愛関係・夫婦関係を指す用法がある。", mne:"『世の中』は『世間』のほか『男女の仲』も指すと文脈で覚える。", ex:{t:"よのなかを恨む。",tr:"世間を恨む。"}},
+ {w:"よに～ず（よも～じ）", pos:"連語", mean:"決して～ない（よに～ず）／まさか～ないだろう（よも～じ）", expl:"どちらも強い打消・打消推量を表す呼応表現で、対で覚えると効率的。", mne:"『よに＋ず』＝決して～ない、『よも＋じ』＝まさか～まい、と対にして覚える。", ex:{t:"よに忘れじ。",tr:"決して忘れまい。"}},
+ {w:"よろこび", pos:"名", mean:"お礼・お祝い・昇進", expl:"感謝の意を表す挨拶や、官位が上がる慶事を指すことがある。", mne:"現代語『喜び』に加え、『昇進』の意味もあると覚える。", ex:{t:"よろこび申す。",tr:"お礼を申し上げる。"}},
+ {w:"らうがはし", pos:"形", mean:"騒がしい・乱雑だ", expl:"『乱（らう）がはし』の字を当て、秩序がなく騒々しい様子を表す。", mne:"『乱がはし』＝乱れて騒がしい、と漢字から覚える。", ex:{t:"らうがはしき巷なり。",tr:"騒がしい町中である。"}},
+ {w:"らうたし", pos:"形", mean:"かわいい・いたわりたい", expl:"弱く守ってあげたくなるような、いじらしい可愛らしさを表す。", mne:"『労（らう）たし』＝いたわりたくなるほど可愛い、と漢字で覚える。", ex:{t:"らうたき稚児なり。",tr:"かわいらしい幼児である。"}},
+ {w:"らうらうじ", pos:"形", mean:"洗練されている・熟練している", expl:"物事に慣れ、手際よく上品にこなせる様子を表す。", mne:"『らうらうじ』＝『労（らう）』を重ねた語で、熟練の技と覚える。", ex:{t:"らうらうじき人にぞありける。",tr:"洗練された人であった。"}},
+ {w:"れいの", pos:"連体詞", mean:"いつもの・例の", expl:"普段通りであることを指し示す語。", mne:"『例（れい）の』＝『いつもの例の』と現代語とほぼ同じで覚えやすい。", ex:{t:"れいのところに参る。",tr:"いつもの場所に参る。"}},
+ {w:"わざと", pos:"副", mean:"わざわざ・特別に・本格的に", expl:"現代語『わざと（故意に）』よりも、丁寧・本格的に事を行う意味が中心。", mne:"現代語との意味ずれに注意し、『わざわざ・特別に』を第一に覚える。", ex:{t:"わざと消息す。",tr:"わざわざ手紙を送る。"}},
+ {w:"わびし", pos:"形", mean:"つらい・興ざめだ・貧しくみすぼらしい", expl:"心細く、やるせない気持ちや、みすぼらしい様子を表す。", mne:"『わぶ（動詞）』の形容詞形、とセットで『つらい・わびしい』を覚える。", ex:{t:"わびしき住まひなり。",tr:"わびしくつらい住まいである。"}},
+ {w:"わぶ", pos:"動（上二段）", mean:"困る・つらく思う・嘆く", expl:"物事がうまくいかず困惑し、嘆く様子を表す動詞。", mne:"『わびし』の動詞形として、名詞・形容詞・動詞をセットで覚える。", ex:{t:"世をわぶ。",tr:"世の中をつらく思って嘆く。"}},
+ {w:"わりなし", pos:"形", mean:"道理に合わない・どうしようもない・（程度が）甚だしい", expl:"『理（わり）無し』で、筋が通らない、対処しようのない様子を表す。", mne:"『割（わり）無し』＝割り切れない＝どうしようもない、と覚える。", ex:{t:"わりなき恋にぞありける。",tr:"どうしようもない（道理を超えた）恋であった。"}},
+ {w:"われかのけしき", pos:"連語", mean:"茫然自失の様子・我を忘れた様子", expl:"『我か（我か人か分からないほどの）様子』の意で、放心状態を表す。", mne:"『我か（我なのか）』分からなくなるほどの放心、とそのまま覚える。", ex:{t:"われかのけしきにて臥す。",tr:"茫然自失の様子で横になる。"}},
+]},
+{id:18, words:[
+ {w:"ゐる", pos:"動（上一段）", mean:"座る・存在する／（人を）連れて行く", expl:"『をり』に近く座って存在することを表すほか、人を伴って行く『率る』の意味も持つ。", mne:"『ゐる』＝座って『いる』、または人を『率（ゐ）る』＝連れていく、と二つの漢字で覚える。", ex:{t:"御前にゐる。",tr:"御前に座っている。"}},
+ {w:"をかし", pos:"形", mean:"趣がある・すばらしい／こっけいだ", expl:"知的で明るい興味・関心を引く趣を表す語で、『あはれ』（しみじみ）と対比される美意識。", mne:"『あはれ』としみじみ系、『をかし』は明るい興味系、と対比で覚える。", ex:{t:"闇もなほ、蛍の多く飛びちがひたるもをかし。",tr:"闇夜でもやはり、蛍が多く飛びかっているのも趣がある。",s:"枕草子（第一段・夏）"}},
+ {w:"をこがまし", pos:"形", mean:"ばかげている・差し出がましい", expl:"愚かしく見える様子や、出しゃばった振る舞いを表す。", mne:"『痴（をこ）』＝愚か、が語源、と漢字イメージで覚える。", ex:{t:"をこがましきふるまひなり。",tr:"ばかげたふるまいである。"}},
+ {w:"をさをさ", pos:"副", mean:"めったに～ない・ほとんど～ない", expl:"下に打消を伴って、ほとんど起こらないことを強調する呼応の副詞。", mne:"『をさをさ』を見たら文末の打消とセットで『めったに～ない』と訳す。", ex:{t:"をさをさ見えず。",tr:"めったに姿を見せない。"}},
+ {w:"～を～み", pos:"連語", mean:"～が～ので（原因・理由）", expl:"形容詞の語幹を『を』と『み』で挟み、原因・理由を表す和歌特有の表現。", mne:"『山高み』＝『山が高いので』のように、『を～み』で原因を表す型と覚える。", ex:{t:"岩間を狭み水の音高し。",tr:"岩の間が狭いので、水の音が高く（大きく）響く。"}},
+ {w:"をとこ（をのこ・をんな・おうな）", pos:"名", mean:"をとこ＝（古くは）年若い男性、のち広く男性／夫／下男　をのこ＝男性（性の意識は薄く、夫の意はない）　をんな＝女・妻　おうな＝老女", expl:"『をとこ』は古くは『をとめ』と対応して年若い男性をさし、のちに広く『をんな』に対するものとして性を意識して用いられ、『夫』の意味も持つ。『をのこ』は性の意識が少なく、夫の意味はない。", mne:"『をとこ』＝男・夫、『をのこ』＝男（夫にはならない）、『をんな』＝女・妻、『おうな』＝老女、と四語セットで覚える。", ex:{t:"男もすなる日記といふものを。",tr:"男も書くという日記というものを。",s:"土佐日記（冒頭）"}},
+ {w:"わろし（あし・よろし・よし）", pos:"形", mean:"（程度が）よくない〈わろし〉／悪い〈あし〉／まあまあだ〈よろし〉／よい〈よし〉", expl:"古文の評価語は『あし＜わろし＜よろし＜よし』の順に並ぶ段階があると整理して覚えるとよい。", mne:"『あし・わろし・よろし・よし』を悪い順に並べて、四段階のものさしとして覚える。", ex:{t:"文字あしく書く。",tr:"字を下手に書く。"}},
+ {w:"うけたまはる", pos:"動（四段）", mean:"お聞きする・お受けする（謙譲）", expl:"『聞く』『受く』の謙譲語で、目上の言葉や依頼を謹んで受ける動作を表す。", mne:"『承（うけたまは）る』は現代語の敬語表現にもそのまま残っていると覚える。", ex:{t:"仰せをうけたまはる。",tr:"お言葉をお聞きする。"}},
+ {w:"さへ（だに・すら）", pos:"副助", mean:"…までも・…まで（添加）／…でさえ・…だって（類推・強調）／…だけでも・…なりと（最小限の限定。仮定条件の句に用いる）", expl:"語源は『添（そ）へ』で、添加を表すのが本来の用法。類推の意味では『すら』（上代）・『だに』（中古）と共通するが、中世以降は『さへ』が用いられるようになった。", mne:"①添加（～までも）が本来、②類推（～でさえ）、③仮定条件で最小限（せめて～だけでも）。三つの用法を順に唱える。", ex:{t:"鳥のねだにも聞こえず。",tr:"鳥の声さえも聞こえない。"}},
+ {w:"など（何ど）", pos:"副", mean:"どうして（～か、反語）", expl:"理由を問う疑問・反語を表す副詞で、『などか～ん』の形で『どうして～か、いや～ない』となる。", mne:"『など』の後ろに『か』がつけば強い反語、と型で覚える。", ex:{t:"などかく悲しき。",tr:"どうしてこのように悲しいのか。"}},
+ {w:"～ものの（ものから・ものゆゑ）", pos:"接続助詞", mean:"～けれども・～ものの（逆接）", expl:"前の内容を認めつつ、それに反する内容を続ける逆接の接続助詞グループ。", mne:"『ものから・ものの・ものゆゑ』はすべて逆接の仲間、とまとめて覚える。", ex:{t:"憎からぬものから、恨めしくもあり。",tr:"憎くはないけれども、恨めしくもある。"}},
+]},
+];
+
+/* ---------- viewport height fix (mobile browser chrome) ---------- */
+function setVH(){
+  document.documentElement.style.setProperty('--vh', (window.innerHeight*0.01)+'px');
+}
+setVH();
+window.addEventListener('resize', setVH);
+
+/* ---------- screen management ---------- */
+const screens = {
+  title: document.getElementById('screen-title'),
+  rounds: document.getElementById('screen-rounds'),
+  words: document.getElementById('screen-words'),
+};
+function showScreen(name){
+  Object.values(screens).forEach(s=>s.classList.remove('active'));
+  screens[name].classList.add('active');
+}
+
+/* ---------- title screen: character reveal ---------- */
+const TITLE_TEXT = '古文単語試験対策';
+const titleEl = document.getElementById('titleText');
+const CHUNK = 4;
+let globalIdx = 0;
+for(let start=0; start<TITLE_TEXT.length; start+=CHUNK){
+  const col = document.createElement('div');
+  col.className = 'title-col';
+  [...TITLE_TEXT.slice(start, start+CHUNK)].forEach(ch=>{
+    const span = document.createElement('span');
+    span.className = 'ch';
+    span.textContent = ch;
+    span.style.animationDelay = (0.55 + globalIdx*0.09) + 's';
+    col.appendChild(span);
+    globalIdx++;
+  });
+  titleEl.appendChild(col);
+}
+screens.title.addEventListener('click', ()=>{
+  showScreen('rounds');
+});
+
+/* ---------- round select screen ---------- */
+const roundGrid = document.getElementById('roundGrid');
+function buildRoundGrid(){
+  ROUNDS.forEach((r,i)=>{
+    const btn = document.createElement('button');
+    btn.className = 'round-btn';
+    btn.style.animationDelay = (i*0.03)+'s';
+    btn.innerHTML = '<span class="n">第'+numToKanji(r.id)+'回</span><span class="cnt">'+r.words.length+'語</span>';
+    btn.addEventListener('click',(e)=>{
+      spawnRipple(btn, e);
+      openRound(r.id);
+    });
+    roundGrid.appendChild(btn);
+  });
+}
+document.getElementById('backToTitle').addEventListener('click', ()=> showScreen('title'));
+
+function spawnRipple(btn, e){
+  const rect = btn.getBoundingClientRect();
+  const r = document.createElement('span');
+  r.className = 'ripple';
+  const size = Math.max(rect.width, rect.height);
+  r.style.width = r.style.height = size + 'px';
+  const x = (e.clientX ?? rect.left+rect.width/2) - rect.left - size/2;
+  const y = (e.clientY ?? rect.top+rect.height/2) - rect.top - size/2;
+  r.style.left = x + 'px';
+  r.style.top = y + 'px';
+  btn.appendChild(r);
+  setTimeout(()=>r.remove(), 600);
+}
+
+function numToKanji(n){
+  const d = ['','一','二','三','四','五','六','七','八','九'];
+  if(n<10) return d[n];
+  if(n===10) return '十';
+  if(n<20) return '十'+d[n-10];
+  return String(n);
+}
+
+/* ---------- word viewer screen ---------- */
+const wordsContainer = document.getElementById('wordsContainer');
+const progressLabel = document.getElementById('progressLabel');
+const progressFill = document.getElementById('progressFill');
+const listOverlay = document.getElementById('listOverlay');
+const listGrid = document.getElementById('listGrid');
+const listPanelTitle = document.getElementById('listPanelTitle');
+document.getElementById('backToRounds').addEventListener('click', ()=> showScreen('rounds'));
+
+let observer = null;
+let currentRoundData = null;
+let currentIndex = 0;
+
+function openRound(id){
+  const round = ROUNDS.find(r=>r.id===id);
+  if(!round) return;
+  currentRoundData = round;
+  wordsContainer.innerHTML = '';
+
+  round.words.forEach((w,i)=>{
+    const page = document.createElement('section');
+    page.className = 'page';
+    page.dataset.index = i;
+
+    const headSpans = [...w.w].map((ch,ci)=>'<span class="ch" style="animation-delay:'+(ci*0.07)+'s">'+ch+'</span>').join('');
+
+    const exBlock = w.ex ? (
+      '<div class="tate-block ex">'
+      + '<span class="tag">例文</span><br>'
+      + '<span class="ex-text">'+w.ex.t+'</span><br>'
+      + '<span class="ex-trans">'+w.ex.tr+'</span>'
+      + (w.ex.s ? '<br><span class="ex-src">'+w.ex.s+'</span>' : '')
+      + '</div>'
+    ) : '';
+
+    page.innerHTML =
+      '<div class="tate-flow">'
+      + '<h2 class="tate-headword">'+headSpans+'</h2>'
+      + '<span class="tate-pos">'+w.pos+'</span>'
+      + '<p class="tate-meaning">'+w.mean+'</p>'
+      + '<div class="tate-block expl" style="animation-delay:.15s"><span class="tag">解説</span><br>'+w.expl+'</div>'
+      + '<div class="tate-block mne" style="animation-delay:.3s"><span class="tag">覚え方</span><br>'+w.mne+'</div>'
+      + (exBlock ? exBlock.replace('class="tate-block ex"','class="tate-block ex" style="animation-delay:.45s"') : '')
+      + '</div>'
+      + '<div class="page-idx-mark">第'+numToKanji(round.id)+'回 ・ '+(i+1)+' / '+round.words.length+'</div>'
+      + (i < round.words.length-1 ? '<div class="scroll-cue">つぎへ ▽</div>' : '<div class="scroll-cue">これで おわり</div>');
+
+    wordsContainer.appendChild(page);
+  });
+
+  showScreen('words');
+  wordsContainer.scrollTop = 0;
+  currentIndex = 0;
+  updateProgress(round, 0);
+  setupObserver(round);
+  buildListGrid(round, 0);
+}
+
+function jumpToWord(idx){
+  const pages = wordsContainer.querySelectorAll('.page');
+  if(pages[idx]){
+    pages[idx].scrollIntoView({behavior:'smooth', block:'start'});
+  }
+  closeList();
+}
+
+function buildListGrid(round, activeIdx){
+  listPanelTitle.textContent = '第'+numToKanji(round.id)+'回 の 単語 一覧';
+  listGrid.innerHTML = '';
+  round.words.forEach((w,i)=>{
+    const chip = document.createElement('button');
+    chip.className = 'list-chip' + (i===activeIdx ? ' current' : '');
+    chip.dataset.idx = i;
+    chip.innerHTML =
+      '<span class="li-idx">'+String(i+1).padStart(2,'0')+'</span>'
+      + '<span class="li-word">'+w.w+'</span>'
+      + '<span class="li-mean">'+w.mean+'</span>';
+    chip.addEventListener('click', ()=> jumpToWord(i));
+    listGrid.appendChild(chip);
+  });
+}
+
+document.getElementById('openList').addEventListener('click', ()=>{
+  if(!currentRoundData) return;
+  buildListGrid(currentRoundData, currentIndex);
+  listOverlay.classList.add('open');
+});
+document.getElementById('closeList').addEventListener('click', closeList);
+listOverlay.addEventListener('click', (e)=>{
+  if(e.target === listOverlay) closeList();
+});
+function closeList(){
+  listOverlay.classList.remove('open');
+}
+
+function updateProgress(round, i){
+  currentIndex = i;
+  progressLabel.textContent = '第'+numToKanji(round.id)+'回 ・ '+(i+1)+' / '+round.words.length;
+  progressFill.style.height = (((i+1)/round.words.length)*100)+'%';
+}
+
+function setupObserver(round){
+  if(observer) observer.disconnect();
+  observer = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting && entry.intersectionRatio > 0.55){
+        entry.target.classList.add('active');
+        const idx = Number(entry.target.dataset.index);
+        updateProgress(round, idx);
+      } else {
+        entry.target.classList.remove('active');
+      }
+    });
+  }, { root: wordsContainer, threshold: [0, 0.55, 1] });
+
+  document.querySelectorAll('.page').forEach(p=>observer.observe(p));
+}
+
+/* ---------- init ---------- */
+buildRoundGrid();
+</script>
+<!-- ▼ 元のHTMLの </body> の直前（元の </script> の後ろ）に、ここから最後までを貼り付ける -->
+<style id="kobun-patch">
+/* 非表示の画面・目次にフォーカスが入らないように */
+.screen{visibility:hidden;transition:opacity .55s cubic-bezier(.2,.7,.3,1),transform .55s cubic-bezier(.2,.7,.3,1),visibility 0s linear .55s}
+.screen.active{visibility:visible;transition-delay:0s}
+.list-overlay{visibility:hidden;transition:opacity .3s ease,visibility 0s linear .3s}
+.list-overlay.open{visibility:visible;transition-delay:0s}
+
+/* 回の選択：狭い画面で文字が切れる */
+.round-grid{grid-template-columns:repeat(auto-fill,minmax(96px,1fr));max-width:700px;margin:0 auto}
+.round-btn .n{font-size:1.1rem}
+
+/* ノッチ・ホームバー */
+#screen-rounds{padding-left:calc(22px + env(safe-area-inset-left,0px));padding-right:calc(22px + env(safe-area-inset-right,0px))}
+.rounds-header{padding-top:calc(22px + env(safe-area-inset-top,0px))}
+.words-chrome{padding-top:calc(16px + env(safe-area-inset-top,0px));padding-left:calc(18px + env(safe-area-inset-left,0px));padding-right:calc(18px + env(safe-area-inset-right,0px))}
+.page{padding-top:calc(70px + env(safe-area-inset-top,0px));padding-bottom:calc(40px + env(safe-area-inset-bottom,0px));opacity:1;transform:none}
+.page-idx-mark{bottom:calc(18px + env(safe-area-inset-bottom,0px))}
+.scroll-cue{bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+
+/* ページ全体ではなく中身だけを縮小（scroll-snapの位置ズレ防止） */
+.page>.tate-flow{opacity:.28;transform:scale(.92);transition:opacity .5s ease,transform .5s ease}
+.page.active>.tate-flow{opacity:1;transform:scale(1)}
+
+/* 縦書き：多段組みを外し、余白・罫線を縦書き用（論理プロパティ）に */
+.tate-flow{columns:auto;column-gap:normal;height:min(calc(var(--vh,1vh)*72),560px)}
+.tate-headword{margin:0;margin-block-end:14px}
+.tate-pos{margin:0;margin-block-end:18px}
+.tate-meaning,.tate-block{margin:0;margin-block-end:22px}
+.tate-block .tag{margin-bottom:0;padding-bottom:0;border-bottom:0;margin-block-end:8px;padding-block-end:2px;border-block-end:1px solid var(--gold)}
+@media (max-height:820px){
+  .tate-flow{height:min(calc(var(--vh,1vh)*68),470px)}
+  .tate-headword{margin-block-end:10px}
+  .tate-meaning,.tate-block{margin-block-end:16px}
+  .rounds-header{padding-top:calc(14px + env(safe-area-inset-top,0px))}
+  .page{padding-top:calc(56px + env(safe-area-inset-top,0px));padding-bottom:calc(30px + env(safe-area-inset-bottom,0px))}
+}
+@media (max-width:420px){
+  .chrome-right{gap:8px}
+  .progress-label{font-size:.66rem;letter-spacing:.05em}
+  .nav-list{padding:7px 9px;letter-spacing:.08em}
+}
+
+/* 「視差を減らす」設定で文字が透明のままになる */
+@media (prefers-reduced-motion:reduce){
+  .title-vertical .ch,.round-btn,.tate-headword .ch,.tate-block{opacity:1 !important;filter:none !important;transform:none !important}
+  .tap-hint{opacity:.85 !important}
+}
+
+/* 暗記モード */
+.nav-list.on{background:var(--shu);border-color:var(--shu);color:#fff}
+.reveal-btn{display:none;position:absolute;left:50%;bottom:calc(46px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:6;background:var(--card);border:1px solid var(--shu);color:var(--shu-deep);font-family:inherit;font-weight:700;font-size:.85rem;letter-spacing:.15em;padding:8px 22px;border-radius:3px;cursor:pointer}
+.quiz .reveal-btn{display:block}
+.quiz .tate-flow{cursor:pointer}
+.qm .page:not(.revealed) .sm,.qw .page:not(.revealed) .sw{color:transparent !important;background:rgba(74,66,53,.13);border-radius:3px;user-select:none;-webkit-user-select:none}
+.qm .list-chip .li-mean,.qw .list-chip .li-word{color:transparent;background:rgba(74,66,53,.13);border-radius:2px}
+</style>
+<script>
+(function(){
+
+  /* ---- 暗記モード ---- */
+  let quiz=0;
+  try{quiz=Number(localStorage.getItem('kobun_quiz'))||0;}catch(e){}
+  if(quiz>2)quiz=0;
+  const btn=document.createElement('button');
+  btn.className='nav-list';btn.id='toggleQuiz';btn.type='button';btn.textContent='暗記';
+  document.querySelector('.chrome-right').insertBefore(btn,document.getElementById('openList'));
+  const pagesOf=()=>wordsContainer.querySelectorAll('.page');
+  function label(p){const b=p.querySelector('.reveal-btn');if(b)b.textContent=p.classList.contains('revealed')?'隠す':'こたえを見る';}
+  function reveal(p){if(!quiz||!p)return;p.classList.toggle('revealed');label(p);}
+  function apply(){
+    screens.words.classList.toggle('quiz',!!quiz);
+    screens.words.classList.toggle('qm',!!(quiz&1));
+    screens.words.classList.toggle('qw',!!(quiz&2));
+    btn.classList.toggle('on',!!quiz);
+    btn.setAttribute('aria-pressed',String(!!quiz));
+    btn.textContent=['暗記','意味隠し','単語隠し'][quiz];
+    pagesOf().forEach(p=>{p.classList.remove('revealed');label(p);});
+  }
+  function enhance(){
+    pagesOf().forEach(p=>{
+      p.querySelectorAll('.tate-meaning,.ex-trans,.tate-block.expl,.tate-block.mne').forEach(e=>e.classList.add('sm'));
+      p.querySelectorAll('.tate-headword,.ex-text,.tate-block.expl,.tate-block.mne').forEach(e=>e.classList.add('sw'));
+      const b=document.createElement('button');
+      b.type='button';b.className='reveal-btn';
+      b.addEventListener('click',e=>{e.stopPropagation();reveal(p);});
+      p.appendChild(b);
+      p.querySelector('.tate-flow').addEventListener('click',()=>reveal(p));
+    });
+    apply();
+  }
+  btn.addEventListener('click',()=>{
+    quiz=(quiz+1)%3;
+    try{localStorage.setItem('kobun_quiz',String(quiz));}catch(e){}
+    apply();btn.blur();
+  });
+  const open0=openRound;
+  window.openRound=function(id){
+    if(document.activeElement)document.activeElement.blur();
+    open0(id);enhance();
+  };
+  /* ページを離れたら「こたえ」を隠し直す */
+  window.setupObserver=function(round){
+    if(observer)observer.disconnect();
+    observer=new IntersectionObserver(es=>{
+      es.forEach(en=>{
+        const p=en.target;
+        if(en.isIntersecting&&en.intersectionRatio>0.55){
+          p.classList.add('active');
+          updateProgress(round,Number(p.dataset.index));
+        }else{
+          p.classList.remove('active','revealed');
+          label(p);
+        }
+      });
+    },{root:wordsContainer,threshold:[0,0.55,1]});
+    pagesOf().forEach(p=>observer.observe(p));
+  };
+
+  /* ---- キーボード操作 ---- */
+  function go(d){
+    const ps=pagesOf();
+    const t=ps[Math.max(0,Math.min(ps.length-1,currentIndex+d))];
+    if(t)t.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  document.addEventListener('keydown',e=>{
+    if(e.metaKey||e.ctrlKey||e.altKey)return;
+    const k=e.key,onBtn=document.activeElement&&document.activeElement.tagName==='BUTTON';
+    if(screens.title.classList.contains('active')){
+      if(k==='Enter'||k===' '){e.preventDefault();showScreen('rounds');}
+      return;
+    }
+    if(screens.rounds.classList.contains('active')){
+      if(k==='Escape')showScreen('title');
+      return;
+    }
+    if(listOverlay.classList.contains('open')){if(k==='Escape')closeList();return;}
+    if(k==='Escape'){showScreen('rounds');}
+    else if(k==='ArrowDown'||k==='ArrowRight'||k==='PageDown'){e.preventDefault();go(1);}
+    else if(k==='ArrowUp'||k==='ArrowLeft'||k==='PageUp'){e.preventDefault();go(-1);}
+    else if((k===' '||k==='Enter')&&!onBtn){e.preventDefault();if(quiz)reveal(pagesOf()[currentIndex]);else go(1);}
+    else if(k==='q'||k==='Q'){btn.click();}
+  });
+
+  apply();
+})();
+</script>
+<!-- ▲ ここまで -->
+<script>
+(function(){
+  const WEAK='苦手';
+  let weak=[]; try{weak=JSON.parse(localStorage.getItem('kobun_weak')||'[]');}catch(e){}
+  if(!Array.isArray(weak)) weak=[];
+  const saveWeak=()=>{try{localStorage.setItem('kobun_weak',JSON.stringify(weak));}catch(e){}};
+  let shuf=false; try{shuf=localStorage.getItem('kobun_shuffle')==='1';}catch(e){}
+  const WR={id:WEAK,words:[]}; ROUNDS.push(WR);
+  const lab=r=>r.id===WEAK?(WR.label||'苦手な単語'):'第'+numToKanji(r.id)+'回';
+  const src=r=>r._orig||r.words;
+  const norm=s=>String(s).replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-96)).toLowerCase();
+  const btn=(cls,txt)=>{const b=document.createElement('button');b.type='button';b.className=cls;b.textContent=txt;return b;};
+
+  /* 回ごとのダイジェスト */
+  document.querySelectorAll('.round-btn').forEach((b,i)=>{
+    const r=ROUNDS[i]; if(!r) return;
+    const d=document.createElement('span'); d.className='dg';
+    d.textContent=r.words.slice(0,3).map(w=>w.w.replace(/（.*?）/g,'')).join('／')+'…';
+    b.appendChild(d);
+  });
+
+  /* スワイプ・矢印キー（右→左の読み順：左＝次） */
+  function goPage(d){
+    const ps=wordsContainer.querySelectorAll('.page');
+    const t=ps[Math.max(0,Math.min(ps.length-1,currentIndex+d))];
+    if(t) t.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  let sx=0,sy=0;
+  wordsContainer.addEventListener('touchstart',e=>{const t=e.changedTouches[0];sx=t.clientX;sy=t.clientY;},{passive:true});
+  wordsContainer.addEventListener('touchend',e=>{
+    const t=e.changedTouches[0], dx=t.clientX-sx, dy=t.clientY-sy;
+    if(Math.abs(dx)>70&&Math.abs(dy)<45){
+      const f=e.target.closest&&e.target.closest('.tate-flow');
+      if(f&&f.scrollWidth>f.clientWidth+2) return;
+      goPage(dx>0?1:-1);
+    }
+  },{passive:true});
+  document.addEventListener('keydown',e=>{
+    if(e.target&&/INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if(!screens.words.classList.contains('active')||listOverlay.classList.contains('open')||so.classList.contains('open')) return;
+    if(e.key==='ArrowLeft'){e.preventDefault();e.stopPropagation();goPage(1);}
+    else if(e.key==='ArrowRight'){e.preventDefault();e.stopPropagation();goPage(-1);}
+  },true);
+
+  /* 進捗表示・目次の見出し（苦手ラウンド対応） */
+  window.updateProgress=function(round,i){
+    currentIndex=i;
+    progressLabel.textContent=lab(round)+' ・ '+(i+1)+' / '+round.words.length;
+    progressFill.style.height=(((i+1)/round.words.length)*100)+'%';
+  };
+  const bgl=window.buildListGrid;
+  window.buildListGrid=function(r,a){bgl(r,a);listPanelTitle.textContent=lab(r)+' の 単語 一覧';};
+
+  /* 苦手チェック */
+  const wcount=()=>{const s=new Set(weak);let n=0;ROUNDS.forEach(r=>{if(r.id!==WEAK)src(r).forEach(w=>{if(s.has(w.w))n++;});});return n;};
+  const gb=btn('round-btn weak-btn','');
+  roundGrid.insertBefore(gb,roundGrid.firstChild);
+  const subs=[];
+  function refresh(){
+    const n=wcount();
+    const sw=new Set(weak);
+    subs.forEach(o=>{const c=src(o.r).filter(w=>sw.has(w.w)).length;o.b.textContent='★苦手 '+c+'語';o.b.disabled=!c;});
+    gb.disabled=!n;
+    gb.innerHTML='<span class="n">★苦手</span><span class="cnt">'+n+'語</span>';
+  }
+  function openWeak(rid){
+    const s=new Set(weak), ws=[];
+    ROUNDS.forEach(r=>{if(r.id!==WEAK&&(rid===undefined||r.id===rid))src(r).forEach(w=>{if(s.has(w.w))ws.push(w);});});
+    if(!ws.length) return false;
+    WR.rid=rid;
+    WR.label=rid===undefined?'苦手な単語':'第'+numToKanji(rid)+'回の苦手';
+    WR.words=ws; WR._orig=null; openRound(WEAK);
+    return true;
+  }
+  function reopen(){
+    const c=currentRoundData; if(!c) return;
+    if(c.id===WEAK){ if(!openWeak(WR.rid)) showScreen('rounds'); }
+    else openRound(c.id);
+  }
+  gb.addEventListener('click',()=>openWeak());
+  roundGrid.querySelectorAll('.round-btn:not(.weak-btn)').forEach((b,i)=>{
+    const r=ROUNDS[i]; if(!r) return;
+    const cell=document.createElement('div'); cell.className='round-cell';
+    roundGrid.insertBefore(cell,b); cell.appendChild(b);
+    const wb=btn('weak-sub',''); wb.addEventListener('click',()=>openWeak(r.id));
+    cell.appendChild(wb); subs.push({b:wb,r});
+  });
+
+  /* ランダム／検索ボタン */
+  const hd=document.createElement('div'); hd.className='hd-r';
+  const s1=btn('nav-list','検索'), sb=btn('nav-list','ランダム'), s2=btn('nav-list','検索');
+  hd.append(s1); document.querySelector('.rounds-header').appendChild(hd);
+  const anchor=document.getElementById('toggleQuiz')||document.getElementById('openList');
+  anchor.parentNode.insertBefore(s2,anchor);
+  anchor.parentNode.insertBefore(sb,anchor);
+  const syncS=()=>{sb.classList.toggle('on',shuf);sb.setAttribute('aria-pressed',String(shuf));}; syncS();
+  sb.addEventListener('click',()=>{shuf=!shuf;try{localStorage.setItem('kobun_shuffle',shuf?'1':'0');}catch(e){} syncS();reopen();});
+
+  /* 検索 */
+  const so=document.createElement('div'); so.className='list-overlay'; so.id='searchOverlay';
+  so.innerHTML='<div class="list-panel"><div class="list-panel-header"><input id="searchInput" type="search" placeholder="見出し語・意味で検索" autocomplete="off"><button class="nav-back" type="button" id="closeSearch">×</button></div><div class="list-grid" id="searchResults"></div></div>';
+  document.getElementById('app').appendChild(so);
+  const inp=so.querySelector('#searchInput'), res=so.querySelector('#searchResults');
+  function jump(id,word){
+    openRound(id);
+    const i=currentRoundData.words.findIndex(x=>x.w===word);
+    const p=wordsContainer.querySelectorAll('.page')[i];
+    if(p) setTimeout(()=>p.scrollIntoView({behavior:'instant',block:'start'}),30);
+  }
+  function closeS(){so.classList.remove('open');inp.blur();}
+  function run(){
+    const q=norm(inp.value.trim()); res.innerHTML='';
+    if(!q){res.innerHTML='<p class="sr-empty">見出し語や意味の一部を入力してください（全回を横断して検索します）。</p>';return;}
+    let n=0;
+    for(const r of ROUNDS){
+      if(r.id===WEAK) continue;
+      for(const w of src(r)){
+        if(n>=80) break;
+        if(norm(w.w).includes(q)||norm(w.mean).includes(q)){
+          n++;
+          const c=document.createElement('button'); c.type='button'; c.className='list-chip';
+          c.innerHTML='<span class="li-idx">'+lab(r)+'</span><span class="li-word">'+w.w+'</span><span class="li-mean">'+w.mean+'</span>';
+          c.addEventListener('click',()=>{closeS();jump(r.id,w.w);});
+          res.appendChild(c);
+        }
+      }
+    }
+    if(!n) res.innerHTML='<p class="sr-empty">見つかりませんでした。</p>';
+  }
+  function openS(){so.classList.add('open');inp.value='';run();setTimeout(()=>inp.focus(),60);}
+  s1.addEventListener('click',openS); s2.addEventListener('click',openS);
+  inp.addEventListener('input',run);
+  inp.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Escape')closeS();});
+  so.querySelector('#closeSearch').addEventListener('click',closeS);
+  so.addEventListener('click',e=>{if(e.target===so)closeS();});
+
+  /* ---- 意味の詳細（頻出の多義語） ---- */
+  const MD={
+'あはれなり':'①しみじみと趣深い・感慨深い　②かわいそうだ・悲しい　③いとしい・愛情深い　④（すぐれていて）立派だ。心が深く動く気持ち全般を表す。',
+'をかし':'①趣がある・風情がある（明るく知的な興味）　②かわいらしい・すばらしい　③おもしろい・こっけいだ。しみじみ系の『あはれ』に対し、明るい感じ。',
+'いみじ':'程度のはなはだしさを表す語。よい方向なら『すばらしい・立派だ』、悪い方向なら『ひどい・たいへんだ・恐ろしい』。連用形は『たいそう・とても』と副詞的に使う。',
+'あさまし':'意外さに驚きあきれるさま。多くは悪い事態に『情けない・嘆かわしい・あんまりだ』の意で使う。',
+'あやし':'①不思議だ・怪しい（怪し）　②身分が低い・卑しい・粗末だ（賤し）。『あやしき身』『あやしの者』は②。',
+'かなし':'①いとしい・かわいい（愛し）　②悲しい・つらい（悲し）。強い感情が胸に迫る意で、愛情と悲哀の両面を持つ。',
+'ゆゆし':'①不吉だ・忌まわしい・恐れ多い　②程度がはなはだしい（善悪どちらにも）・たいへんなものだ。『忌む』に通じ、触れてはならないほど強い意。',
+'ありがたし':'『有ることが難しい』→めったにない・珍しい。そこから『すばらしい・立派だ』の意にも広がる。『感謝』の意は中世以降。',
+'おどろく・おどろかす':'①はっと気づく・目を覚ます　②びっくりする。『おどろかす』は他動詞で『目を覚まさせる・気づかせる』。古文では①が中心。',
+'なかなかなり':'中途半端なために、かえって悪い結果になるさま。『なまじっか〜するくらいなら、しない方がまし』という語感。',
+'つれづれなり':'することがなくて退屈で、手持ちぶさたなさま。ぼんやりと物思いにふける気分も含む。',
+'ながむ':'①ぼんやり遠くを見る　②物思いにふける。和歌では『長雨（ながめ）』との掛詞として頻出。',
+'ののしる':'①大声で騒ぐ　②（世間で）評判になる・うわさになる。『悪口を言う』の意は中世以降の用法。',
+'めでたし':'『愛づ（ほめる）』＋『甚し』が語源。すばらしい・見事だ。祝い事の意の『めでたい』より広く、称賛全般に使う。',
+'めづらし':'①すばらしい・見事だ・愛すべきだ　②新鮮だ・目新しい　③めったにない。『愛づ』が原義で、心ひかれる気持ちが基本。',
+'らうたし':'弱いものを守ってやりたくなるような愛らしさ。かわいい・いじらしい・いたわりたい。',
+'こころにくし':'ほめる語。奥ゆかしい・上品で心ひかれる。もっと知りたくなるような深みがある様子。',
+'けしき':'①様子・ありさま・景色　②機嫌・顔色・態度　③きざし・兆候。『けしきばむ』は『それらしい様子を見せる』。',
+'けはひ':'目には見えないが感じ取れる様子・雰囲気。人の気配や、香り・声などから伝わるその場の様子。',
+'あたらし':'『惜しい・もったいない』。立派なものが失われそうで惜しむ気持ち。『新しい』は別語（あらたし）。',
+'あからさまなり':'『ちょっとの間だ・かりそめだ』が中心。ほんの一時的なさま。現代語の『露骨だ』と混同しない。',
+'やがて':'①すぐに・そのまま（間を置かず）　②やがて・そのうち。古文では①が基本。',
+'おとなし':'『大人』らしい。大人びている・思慮深い・しっかりしている。現代語の『おとなしい（従順）』とは別。',
+'やさし':'①身がやせ細るほどつらい・恥ずかしい（痩す）　②つつましい・優美だ・けなげだ・思いやり深い。',
+'むつかし':'①うっとうしい・不快だ・気味が悪い　②わずらわしい・面倒だ。中心は不快な感情。',
+'かたし':'『難し』。実現が難しい・めったにない。『ありがたし』も同じ系統の語。',
+'こころもとなし':'①じれったい・待ち遠しい　②はっきりしなくて不安だ・気がかりだ。『心の元』が定まらない状態。',
+'おぼつかなし':'①はっきりしない・ぼんやりしている　②不安だ・気がかりだ　③待ち遠しい・会えなくて心もとない。',
+'ゆかし':'見たい・聞きたい・知りたい・読みたいなど、対象に心ひかれる気持ち。『行きたい』という気持ちが語源。',
+'いとほし':'①かわいそうだ・気の毒だ　②いとしい・かわいい。相手への同情や愛情から心が痛むような気持ち。',
+'はしたなし':'①中途半端だ・どっちつかずで落ち着かない　②きまりが悪い・みっともない　③そっけない・無愛想だ。',
+'すさまじ':'期待に外れて興ざめだ・殺風景だ・冷淡だ。強烈さを表す現代語の『すさまじい』とは別。',
+'さうざうし':'あるはずのものがなくて物足りない・寂しい。',
+'かたはらいたし':'①（他人の言動が）そばで見ていて気恥ずかしい・きまりが悪い　②気の毒だ・見ていて心苦しい　③苦々しい。',
+'うしろめたし':'先行きや相手の身を案じて不安に思う気持ち。『気がかりだ・心配だ』。反対語は『うしろやすし』。',
+'はづかし':'①（相手が立派で）こちらが恥ずかしくなるほどだ・気後れする　②（自分が）恥ずかしい。①は相手への敬意を含む評価語。',
+'つとめて':'①早朝　②（何かがあった）翌朝。男女が逢った後の『後朝（きぬぎぬ）』の朝を指すことが多い。',
+'たより':'①よりどころ・つて・縁故　②便り・手紙　③機会・ついで　④様子・都合。',
+'ほど':'時間・距離・年齢・身分・程度など『どれくらいか』を表す幅広い語。文脈に応じて訳し分ける。',
+'あそび':'①詩歌・管弦を楽しむ催し（宴）　②遊興・狩り。貴族の風雅な催しの意が中心。',
+'おぼえ':'①評判・世間の信望　②（主君・帝の）寵愛　③記憶・思い出。',
+'ことわり':'①道理・筋道　②理由・わけ。『ことわりなり』は『もっともだ』。',
+'かしこし':'①恐れ多い・畏れ敬うべきだ　②すぐれている・賢い　③（程度が）はなはだしい・たいへんなものだ。',
+'ゆゑ':'①理由・原因　②由緒・家柄　③風情・趣・教養。『ゆゑあり』は『風情がある・由緒がある』。',
+'いたづらなり':'①むなしい・無駄だ　②することがなくて暇だ　③『いたづらになる』で『死ぬ』の意。',
+'あだなり':'①不誠実だ・浮気だ（移り気）　②はかない・もろい　③無駄だ・実がない。',
+'つれなし':'①平然としている・そ知らぬ顔だ　②冷淡だ・薄情だ。相手の思いに無関心で素っ気ないさま。',
+'なのめなり':'ありふれて平凡だ・いい加減だ。打消の『なのめならず』は『格別だ・並々でない』。',
+'あながちなり':'①無理に・強引だ　②ひたすらだ・ひどく。下に打消がつくと『必ずしも〜ない』。',
+'おろかなり':'①いい加減だ・おろそかだ　②『〜もおろかなり』で『〜では言い尽くせない』。愚かの意ではない。',
+'いぶかし':'①気がかりだ・知りたい（見たい・聞きたい）　②疑わしい・不審だ。',
+'めざまし':'①（身分の低い者などに対して）けしからん・心外だ　②（意外に）すばらしい・立派だ。目が覚めるほど意外な気持ち。',
+'むげなり':'①ひどい・どうしようもない　②（程度が）まったくだ。『むげに』は『むやみに・ひどく』。',
+'さかし':'①かしこい・利口だ　②しっかりしている　③（悪い意味で）利口ぶる・出しゃばりだ。『さかしら』は利口ぶること。',
+'つたなし':'①下手だ・未熟だ　②愚かだ　③運が悪い・不運だ。',
+'はかなし':'①頼りない・あっけない　②むなしい・かりそめだ　③ちょっとした・取るに足りない。',
+'あいなし':'①つまらない・おもしろくない・気にくわない　②（連用形『あいなく』で）わけもなく・むやみに。不快や不調和の感じが基本。',
+'あく':'飽きる・いやになる。四段活用。『飽かず』『飽かぬ』は「飽きない・満足しない」で、名残惜しい気持ちを表す。',
+'あした':'朝（夜が明けた朝）。現代語の『明日』の意ではない。対は『ゆふべ（夕方）』。',
+'あぢきなし':'①どうにもならない・つまらない　②道理に合わない・苦々しい。思うようにならない空しさや不快感。',
+'あてなり':'高貴だ・上品だ。身分や気品の高さをほめる語。対は『いやし』。',
+'あない':'①案内・取り次ぎ　②事情・様子。『あないす』は『取り次ぐ・案内する』。',
+'あなかま':'『あな（ああ）＋かまし（やかましい）』。ああ、やかましい→静かに！と人を制止する感動詞。',
+'あふ':'①（人に）会う・出会う　②結婚する・男女が契りを結ぶ。男女の仲では『逢ふ』と書く。',
+'あへず':'動詞の連用形について『〜しきれない』。『聞きもあへず』は『聞き終えないうちに』の意。',
+'あへなし':'張り合いがなく、あっけない・どうしようもない。期待や気力がくじけた気持ち。',
+'あやなし':'①筋道が立たない・わけがわからない　②つまらない。『あやなく』は『わけもなく・むやみに』。',
+'あやにくなり':'①意地が悪い・つれない　②あいにくだ・都合が悪い　③ひどい・はなはだしい。物事が思うようにならない様子。',
+'あらぬ':'①そうではない・別の　②意外な・思いがけない・見当違いの。『あり』の未然形＋打消『ぬ』。',
+'あらまし':'①前もって思い描く予定・計画・心づもり　②あらすじ・おおよそ。',
+'あらまほし':'理想的だ・そうあってほしい。望ましい状態への願望を含む評価語。',
+'ありく':'歩き回る・出歩く。目的もなく動き回る感じを含む。',
+'ありつる（ありし）':'①先ほどの・さっきの（ありつる）　②以前の・昔の（ありし）。話題になった事柄を指す連体詞。',
+'あるじ（す）':'名詞は『主人』。サ変動詞『あるじす』は『主人としてもてなす・ご馳走する』。',
+'いうげんなり':'優雅だ・上品だ。気品があって美しい様子をほめる語。',
+'いかが':'①どう（方法・状態）　②どうして（疑問）　③どうして〜か、いや〜ない（反語）。',
+'いかで':'①どうにかして（願望・意志と共に）　②どうして（疑問）　③どうして〜か、いや〜ない（反語）。下の語で見分ける。',
+'いかに':'①どのように・どう　②どんなに（程度）。呼びかけで『どうしたのか』の意にも。',
+'いそぎ':'①急ぐこと　②準備・用意。『〜のいそぎ』は『〜の準備』。',
+'いたく':'①ひどく・たいそう　②（下に打消）たいして〜ない。形容詞『いたし』の連用形。',
+'いつく':'①（神に仕えるため）心身を清める　②大切に育てる・かしづく。入試では②が頻出。',
+'いつしか':'①（願望）早く〜したい　②いつの間にか　③早くも。下の表現で見分ける。',
+'いと（いとど）':'『いと』はたいそう・とても。『いとど』はますます・いよいよ。『いと〜ず』は『たいして〜ない』。',
+'いふかひなし':'①言っても仕方がない・どうしようもない　②（身分・年齢が低く）取るに足りない・幼い。',
+'いまやう':'当世風・今風。『今様』。流行の新しい様式や、その流行歌をいう。',
+'いやし':'①身分が低い　②みすぼらしい・見苦しい　③品がない。対は『あてなり』『やむごとなし』。',
+'うし':'つらい・いやだ・情けない。『憂し』。つらくていやな気持ちが基本。',
+'うしろやすし':'安心だ・頼もしい。後を任せても心配ないという気持ち。対は『うしろめたし』。',
+'うたてし':'①いやだ・不快だ・情けない　②（副詞『うたて』）ますますひどく・いっそう。悪い方向へ進む感じ。',
+'うつくし':'①かわいい・いとしい　②きれいだ。平安では①が中心で、小さいもの・幼いものへの愛情を含む。',
+'うつろふ':'①色があせる・衰える　②移る・移動する　③心変わりする。花の色の変化から人の心の変化へ。',
+'うるはし':'①端正だ・整っていて美しい　②きちんとしている・礼儀正しい　③立派だ。乱れのない美しさ。',
+'うれふ':'①嘆く・心配する・悲しむ　②（朝廷などに）訴え出る。下二段活用。',
+'え（～ず）':'下に打消を伴い『〜できない』（不可能）。『え〜ず』『え〜じ』などの呼応。',
+'えうなし':'必要がない・役に立たない・つまらない。『用なし』。',
+'えならず':'①なんとも言えないほどすばらしい　②言葉で言い表せない。多くは美しさをほめる語。',
+'えんご（修辞法）':'和歌で、ある語と意味上関係の深い語を意図的に散りばめる技法。例：『露』と『消ゆ』。『掛詞』と混同しない。',
+'えんなり':'①艶やかだ・優美だ　②なまめかしい・色っぽい。はなやかで魅力的な美しさ。',
+'おきつ':'①定める・取り決める　②（心づもりを）決めておく。『掟』と同源の下二段活用。',
+'おくる':'①先立たれる・（人より）あとに残る　②遅れる。下二段『後る』。四段『送る』（見送る・送り届ける）と区別する。',
+'おこす':'（こちらへ）よこす・送ってくる。下二段『遣す』。四段『起こす』（起こす・始める）と区別する。',
+'おこなひ':'仏道修行・勤行。『行ふ』の名詞形で、特に仏道に励む行い。',
+'おとなふ':'①音を立てる　②訪れる・訪問する　③便りをする。音で人の来訪を知らせる意から。',
+'おどろおどろし':'①気味が悪い・恐ろしい　②仰々しい・大げさだ。音や様子が驚くほど大きい。',
+'おのづから':'①自然に・ひとりでに　②たまたま・偶然。人為でなく成り行きに任せる意。',
+'おはす':'『あり・をり・行く・来』の尊敬語＝いらっしゃる。補助動詞では『〜ていらっしゃる』。',
+'おぼす':'『思ふ』の尊敬語＝お思いになる・お考えになる。',
+'おほとのごもる':'『寝（ぬ）』の尊敬語＝お休みになる。『大殿籠る』。',
+'おぼゆ':'①思われる・自然と感じられる　②思い出される　③（人に）似る。自発の意味が基本。',
+'おもしろし':'①趣がある・風情がある　②楽しい・心が晴れる。景色や音楽などに心ひかれる気持ち。',
+'おもておこし':'面目が立つこと・名誉。顔（面）を起こす＝体面が立つ。対は『おもてぶせ』。',
+'おもてぶせ':'面目を失うこと・恥。顔（面）を伏せる＝体面がつぶれる。対は『おもておこし』。',
+'かぎり':'①限度・限り　②最期・死ぬとき　③すべて・ありったけ。',
+'かくる':'①隠れる　②（貴人が）亡くなる。下二段『隠る』。『かくれたまふ』は婉曲な死の表現。',
+'かけことば（修辞法）':'同音異義を利用して、一つの語に二つの意味を重ねる技法。例：『松』と『待つ』、『ながめ』と『長雨』。',
+'かしづく':'①大切に育てる・世話をする　②（人に）かしずく・仕える。親が娘を大事に育てる意が頻出。',
+'かたくななり':'①頑固だ・かたくなだ　②風流を解さない・無教養だ・見苦しい。',
+'かたじけなし':'①恐れ多い　②もったいない・ありがたい　③面目ない・恥ずかしい。身に余る厚意への気持ち。',
+'かたたがへ':'陰陽道で凶とされる方角を避けるため、前夜に別の方角へ泊まって方角を変える風習。',
+'かたち':'①容貌・顔だち　②姿・形・様子。人の外見の美しさをいうことが多い。',
+'かたほなり':'①未熟だ・不完全だ　②欠点がある。対は『まほなり（完全だ）』。',
+'かたみに':'互いに。双方が同じことをし合う意の副詞。',
+'かたらふ':'①親しく話し合う　②男女が深い仲になる・言い寄る　③仲間に引き入れる・説得する。',
+'かづく':'四段：①（頭に）かぶる・（水に）潜る　②（褒美を）いただく。下二段：『かぶせる・褒美として与える』。活用の種類で意味が変わる。',
+'かどかどし':'①才気がある・利発だ　②（言動に）かどがある・とげとげしい。多くは知的な鋭さをほめる語。',
+'かなしうす':'『かなし（愛し）』のサ変動詞化。かわいがる・いつくしむ。',
+'かる':'①離れる・疎遠になる（離る）　②（水が）涸れる・（草木が）枯れる。人の足が遠のく意が頻出。',
+'かへり（かへし）':'①返歌・返事　②返すこと・戻ること。和歌の贈答で、贈られた歌に返す歌をいう。',
+'からし':'①つらい・苦しい　②厳しい・ひどい　③（味が）からい・塩辛い。精神的なつらさをいうのが基本。',
+'きこゆ':'①聞こえる　②評判になる・世に知られる　③申し上げる（謙譲）。謙譲の補助動詞では『〜申し上げる』。',
+'きは':'①身分・家柄・程度　②端・ふち・境目（際）　③ほど・時。人の身分の高低をいうことが多い。',
+'きよらなり':'気品があって美しい・まばゆいほど美しい。最上級の美をほめる語で、『きよげなり』より上位。',
+'ぐす':'①伴う・連れていく　②備える・添える・一緒にいる。『具す』。そばに従う人や物をいう。',
+'くらうど':'蔵人所の役人。天皇に近侍し、文書・儀式・雑事を扱う。長官格は『蔵人頭』。',
+'けし':'①異様だ・普通でない　②よくない・不都合だ。『異し』。',
+'けしからず':'①異様だ・普通でない　②よくない・好ましくない・不都合だ。',
+'けしきばかり':'①形ばかり・わずかばかり　②ほんの少し。実質を伴わない形式的な様子。',
+'げに':'①なるほど・本当に（納得）　②実に・まったく。人の言葉や評判を確かめて納得する気持ち。',
+'こうず':'①疲れる・くたびれる　②困る・弱る・うんざりする。サ変『困ず』。',
+'ここら（ここだ、そこら）':'①たくさん・数多く　②非常に・はなはだしく（程度）。現代語の『このあたり』の意ではない。',
+'こころぐるし':'①気の毒だ・見ていて心が痛む　②気がかりだ・心配だ。相手を思いやって心が痛む気持ち。',
+'こころづくし':'①あれこれ思い悩むこと　②（相手のために）心を尽くすこと。秋の物思いの意で用いられることが多い。',
+'こころなし':'①思いやりがない・情趣を解さない　②思慮がない・分別がない。『心なき身』は風流を解さない者。',
+'こちたし':'①（量や言葉が）多くて煩わしい・うるさい　②仰々しい・大げさだ。『言痛し』。',
+'こと（事・異・言）':'①事（事柄・出来事）　②異（別の・ほかの：『こと人』）　③言（言葉）。同音で意味が違う。',
+'ことごとし':'大げさだ・仰々しい。必要以上に大がかりなさま。',
+'ざえ':'①学問・学識（特に漢学）　②芸能・才能（音楽など）。『才』。',
+'さがなし':'①性質が悪い・意地が悪い　②いたずらだ・手に負えない。『性（さが）なし』。',
+'さすがなり':'①そうは言ってもやはり・そうかといって　②さすがだ。前の事情を認めつつ割り切れない気持ち。',
+'さながら':'①そのまま・もとのまま　②すべて・まったく　③まるで〜のようだ（比喩）。',
+'さぶらふ':'①お仕えする・おそばにいる（謙譲）　②あります・おります（丁寧）。貴人のそばに控える意から。',
+'さまをかふ（かたちをかふ）':'出家する。髪を切り、僧の姿になること。',
+'さらなり':'言うまでもない・もちろんだ。『言ふもさらなり』の形で用いることが多い。',
+'さらに（～ず）':'（下に打消）まったく〜ない・少しも〜ない。全否定を強める呼応の副詞。',
+'さらぬわかれ':'避けられない別れ＝死別。『避らぬ別れ』。親子の死別をさすことが多い。',
+'さるは':'①そうではあるが・実は（逆接的に補足）　②というのは・そのうえ。前の内容を受けて展開する接続詞。',
+'しのぶ':'①我慢する・耐える（忍ぶ）　②人目を避ける・隠れる（忍ぶ）　③懐かしく思う・慕う（偲ぶ）。',
+'じょことば（修辞法）':'ある語を導く前置きの語句。音数に決まりがなく、歌ごとに作られる。五音で固定の『枕詞』と区別する。',
+'しる（知る・領る・痴る）':'①知る・理解する　②治める・領有する（領る）　③ぼうっとする・正気を失う（痴る）。『国をしろしめす』は『お治めになる』。',
+'すずろなり':'①なんとなく・わけもなく　②むやみに・思いがけず　③関係がない・つまらない。『漫ろなり』。',
+'せ':'①川の浅瀬　②機会・場合・立場。『立つ瀬がない』の『瀬』。',
+'せうそこ':'①手紙・便り　②訪問の取り次ぎを請うこと　③様子・ことづて。『消息』。',
+'せちなり':'①ひたすらだ・切実だ　②（程度が）はなはだしい・大切だ。『切なり』。',
+'せめて':'①無理に・強いて・しいて　②たいそう・ひどく。現代語の『せめて（最低でも）』の意は古文では基本にない。',
+'そうす':'天皇・上皇に申し上げる（謙譲）。『奏す』。中宮・東宮への申し上げは『啓す』。',
+'そこはかとなし':'①はっきりした理由・根拠がない　②どことなく・なんとなく。『そこはか（其処はか）』が定まらない意。',
+'そらごと':'①うそ・偽り　②根拠のない話・作り話。『空言』。',
+'たえて（～ず）':'（下に打消）まったく〜ない・少しも〜ない。『絶えて』。全否定の呼応の副詞。',
+'たがふ':'四段：①食い違う・一致しない・背く。下二段：②違える・間違える・（約束などを）破る。',
+'たけし':'①勇ましい・強い　②激しい・はなはだしい。『猛し』。勇猛さを表す。',
+'たてまつる':'①（物を）差し上げる（謙譲）　②（補助動詞）〜申し上げる（謙譲）　③お召しになる・召し上がる・お乗りになる（尊敬）。',
+'たのむ':'四段：①頼りにする・あてにする。下二段：②頼りにさせる・あてにさせる（期待を持たせる）。活用で意味が逆になる。',
+'たふ':'①堪える・我慢する　②（できる）能力がある・耐え抜く。下二段『堪ふ』。『たへず』は『我慢できない』。',
+'ためし':'先例・前例・例。『ためしなし』は『先例がない』。',
+'ぢもく':'除目。大臣以外の官職を任命する朝廷の儀式。春の『県召（あがためし）の除目』と秋の『司召（つかさめし）の除目』がある。',
+'ついで':'①順序・順番　②機会・ついでの折。『ついでに』は『機会に乗じて』。',
+'つかまつる':'①お仕えする　②（『す』の謙譲）いたす・して差し上げる　③（補助動詞）〜申し上げる。',
+'つかはす':'①（人・物を）お遣わしになる・派遣なさる（尊敬）　②（下位の者に）与える。『遣る』の尊敬。',
+'つきかげ':'①月の光　②月の姿・月。『かげ』は『光』の意が古い。',
+'つきづきし':'似つかわしい・ふさわしい・調和している。『付き付きし』。',
+'つごもり':'月の最終日・月末。『月籠り』が語源。『おほつごもり』は大晦日。',
+'つつむ':'①遠慮する・気兼ねする・人目をはばかる（慎む）　②包む・隠す。つつしみ隠す気持ち。',
+'つゆ（～ず）':'（下に打消）少しも〜ない・まったく〜ない。『露ほども〜ない』。名詞『つゆ』は露・ほんのわずか。',
+'て（手）':'①筆跡・書いた字　②腕前・技　③手段・方法　④手傷。文脈で見分ける。',
+'ときめく':'時流に乗って栄える・寵愛を受けて栄える。『時めく』。現代語の『胸がときめく』の意ではない。',
+'とし':'①鋭い・すばやい　②（耳・目が）敏い　③（時が）早い。『疾し・敏し』。',
+'としごろ':'①長年・数年来　②ここ数年。『年頃』は適齢期の意ではない。',
+'とぶらふ':'①訪ねる・訪問する　②見舞う　③弔う。人を気づかって訪れる意。',
+'とみに':'①急に・にわかに　②（打消『とみにも〜ず』で）急には〜ない。『頓に』。',
+'な～そ':'『な＋動詞連用形（カ変・サ変は未然形）＋そ』で『〜してくれるな』と禁止する、やわらかい制止。',
+'なでふ':'①どうして・なぜ（反語・疑問）　②なんという・どういう。『何といふ』の転。',
+'なにおふ（名に負ふ）':'①その名前を持つ　②評判が高い・名にふさわしい。有名な地名・名物にいう。',
+'なほ':'①やはり・依然として　②さらに・いっそう　③やはり（改めて）〜がよい。',
+'なまめかし':'①優美だ・上品で美しい　②若々しい・みずみずしい　③あでやかだ・色っぽい。もとは『生（なま）』の若さ。',
+'なむ':'①（係助詞）強意・結びは連体形　②（終助詞）〜てほしい（未然形＋なむ）　③（助動詞）きっと〜だろう（連用形＋なむ）。接続で見分ける。',
+'なやむ':'①病気で苦しむ・患う　②悩む・困る・苦しむ。古文では①が中心。'
+  };
+
+  /* 各カードに☆・どこをタップしても答えを開閉 */
+  function decorate(r){
+    wordsContainer.querySelectorAll('.page').forEach((p,i)=>{
+      const w=r.words[i]; if(!w) return;
+      const m=p.querySelector('.page-idx-mark');
+      const dt=MD[w.w];
+      if(dt){
+        const d=document.createElement('div'); d.className='tate-block md sm sw'; d.style.animationDelay='.08s';
+        d.innerHTML='<span class="tag">意味の詳細</span><br>'+dt;
+        const t=p.querySelector('.tate-meaning'); if(t) t.after(d);
+      }
+      if(m) m.textContent=lab(r)+' ・ '+(i+1)+' / '+r.words.length;
+      const st=btn('star-btn','');
+      const paint=()=>{const on=weak.includes(w.w);st.classList.toggle('on',on);st.textContent=on?'★':'☆';st.setAttribute('aria-label',on?'苦手に登録済み':'苦手に登録');};
+      paint();
+      st.addEventListener('click',e=>{
+        e.stopPropagation();
+        const k=weak.indexOf(w.w); if(k<0) weak.push(w.w); else weak.splice(k,1);
+        saveWeak(); paint(); refresh();
+      });
+      p.appendChild(st);
+      if(i===r.words.length-1){
+        p.classList.add('last');
+        const rb=btn('restart-btn','最初から');
+        rb.addEventListener('click',e=>{e.stopPropagation();reopen();});
+        p.appendChild(rb);
+      }
+      p.addEventListener('click',e=>{
+        if(e.target.closest('button')||!screens.words.classList.contains('quiz')) return;
+        e.stopPropagation();
+        p.classList.toggle('revealed');
+        const b=p.querySelector('.reveal-btn');
+        if(b) b.textContent=p.classList.contains('revealed')?'隠す':'こたえを見る';
+      },true);
+    });
+  }
+
+  /* ラウンドを開くとき：ランダム順の適用＋装飾 */
+  const base=window.openRound;
+  window.openRound=function(id){
+    const r=ROUNDS.find(x=>x.id===id);
+    if(r){
+      if(!r._orig) r._orig=r.words.slice();
+      const a=r._orig.slice();
+      if(shuf) for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+      r.words=a;
+    }
+    const wc=wordsContainer, pf=progressFill;
+    wc.style.scrollSnapType='none'; wc.style.scrollBehavior='auto'; pf.style.transition='none';
+    wc.scrollTop=0;
+    base(id);
+    if(r) decorate(r);
+    wc.scrollTop=0;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{wc.style.scrollSnapType='';wc.style.scrollBehavior='';pf.style.transition='';}));
+  };
+  window.addEventListener('resize',()=>{
+    if(!screens.words.classList.contains('active')) return;
+    requestAnimationFrame(()=>{
+      const pg=wordsContainer.querySelectorAll('.page')[currentIndex];
+      if(pg) wordsContainer.scrollTop=pg.offsetTop;
+    });
+  });
+  refresh();
+})();
+</script>
+</body>
+</html>
